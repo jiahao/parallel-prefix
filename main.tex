@@ -90,10 +90,10 @@ Examples of things we can do prefix reduction for. Many examples, but to just na
 
 - ??? (one more)
 
-The obvious thing to do is a serial reduction. Here is a left-associative version, \code{foldl} (as it were), that computes partial sums in a left-associative fashion:
+The obvious thing to do is a serial reduction. Here is a left-associative version, \code{scanl!} (as it were), that computes partial sums in a left-associative fashion:
 
 \begin{minted}{julia}
-function foldl!(y, +)
+function scanl!(y, +)
     @inbounds for i=2:length(y)
         y[i] = y[i-1] + y[i]
     end
@@ -131,7 +131,7 @@ Here is a picture showing what happens
   \vspace{12 pt}
   \mint{julia}|render(prefix8!(AccessArray(8),+))|
   \includegraphics{tree}
-  \caption{Above: operation order for the left-associative algorithm \code{foldl!}.
+  \caption{Above: operation order for the left-associative algorithm \code{scanl!}.
            Below: operation order for the tree algorithm \code{prefix8!}.
            The code listing for the \code{render} function is given in Section~\ref{sec:render}.}
   \label{fig:gates}
