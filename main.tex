@@ -1,6 +1,8 @@
 \documentclass{sig-alternate}
 
+%Nice code listings
 \usepackage{minted}
+
 \newcommand{\code}[1]{\texttt{#1}}
 
 \begin{document}
@@ -88,10 +90,10 @@ Examples of things we can do prefix reduction for. Many examples, but to just na
 
 - ??? (one more)
 
-The obvious thing to do is a serial reduction. Here is a left-associative version, "foldl" (as it were), that computes partial sums in a left-associative fashion:
+The obvious thing to do is a serial reduction. Here is a left-associative version, \code{foldl} (as it were), that computes partial sums in a left-associative fashion:
 
 \begin{minted}{julia}
-function foldl(y, +)
+function foldl!(y, +)
     @inbounds for i=2:length(y)
         y[i] = y[i-1] + y[i]
     end
@@ -113,13 +115,27 @@ function prefix8!(y, .+)
 end
 \end{minted}
 
-It's nice that we can use Unicode
-
 It's nice that we can use infix notation
 
 It's nice that the operator is passed as an argument the function. This means that we have just written a higher order function (or functional).
 
+Here is a figure of the code rendered in Compose. Compose is a Julia package for declarative vector graphics. 
+
 Here is a picture showing what happens
+
+\begin{figure}
+  \centering
+
+  \mint{julia}|render(prefix_serial!(AccessArray(8),+))|
+  \includegraphics{serial}
+  \vspace{12 pt}
+  \mint{julia}|render(prefix8!(AccessArray(8),+))|
+  \includegraphics{tree}
+  \caption{Above: operation order for the left-associative algorithm \code{foldl!}.
+           Below: operation order for the tree algorithm \code{prefix8!}.
+           The code listing for the \code{render} function is given in Section~\ref{sec:render}.}
+  \label{fig:gates}
+\end{figure}
 
 Here is the tree branching version in the general case
 
@@ -219,15 +235,6 @@ function setindex!(A::AccessArray, x, i)
 end
 \end{minted}
 
-Here is a figure of the code rendered in Compose. Compose is a Julia package for declarative vector graphics 
-
-\begin{minted}{julia}
-render(prefix8!(AccessArray(8),+))
-render(prefix_serial!(AccessArray(8),+))
-\end{minted}
-
-Here is code that was used to generate the figure.
-
 \section{Related work}
 
 What do other languages do?
@@ -253,8 +260,9 @@ Also funding.
 \appendix
 
 \section{The \code{render} function}
+\label{sec:render}
 
-Here are the \code{gate} type and \code{render} function used to generate the figures.
+Here are the \code{gate} type and \code{render} function used to generate the figures in Figure~\ref{fig:gates}.
 
 \begin{minted}{julia}
 using Compose
