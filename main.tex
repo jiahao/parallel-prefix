@@ -2,7 +2,6 @@
 
 %Nice code listings
 \usepackage{minted}
-
 \newcommand{\code}[1]{\texttt{#1}}
 
 \begin{document}
@@ -73,6 +72,8 @@ In Julia we expose how overloading at the operator level parallelism can be used
 
 \section{The Julia language}
 
+Julia is a very high level dynamic language designed specifically for technical computing~\cite{Bezanson2012}.
+
 Type system and multiple dispatch. The type system is a resource for programmers, not just a low level compiler system that is hiden from the user. Being able to use types in user written code has turned out to be a great boon for writing technical code.
 
 Polymorphism. Julia provides two distinct kinds of polymorphism. One is the paradigm of multimethods and the other is parametric polymorphism. We will focus more on how multimethods are helpful.
@@ -81,7 +82,7 @@ Polymorphism. Julia provides two distinct kinds of polymorphism. One is the para
 
 What is prefix reduction? Making use of associativity (or approximate associativity side node about floating point and how it doesn't really matter for most applications)  to regroup operations to provide different execution strategies.
 
-Examples of things we can do prefix reduction for. Many examples, but to just name a few relevant for technical computing, we can do 
+There are many applications for the basic prefix sum algorithm~\cite{Blelloch1993}, but to just name a few relevant for technical computing, we can do 
 
 - matrix multiplication
 
@@ -118,7 +119,7 @@ It's nice that we can use infix notation
 
 It's nice that the operator is passed as an argument the function. This means that we have just written a higher order function (or functional).
 
-Here is a figure of the code rendered in Compose. Compose is a Julia package for declarative vector graphics. 
+Here is a figure of the code rendered in Compose, a Julia package for declarative vector graphics~\cite{Compose.jl}. 
 
 Here is a picture showing what happens
 
@@ -187,7 +188,7 @@ Limitations: we specifically took out the overhead needed for distributing the i
 
 We can use the code above to use useful computations but we can also visualize its execution!
 
-We make use of the fact that Julia's arrays provide indexing semantics which can be overloaded for custom types.
+We make use of the fact that Julia's arrays provide indexing semantics which can be overloaded for custom types~\cite{Bezanson2014}.
 
 We note that code of the form
 
@@ -203,7 +204,7 @@ z = x+y
 setindex!(a, z, i)
 \end{minted}
 
-There are much more complicated indexing behaviors but we will not touch on them here. CITE array paper.
+There are much more complicated indexing behaviors but we will not touch on them here~\cite{Bezanson2014}.
 
 The nice thing is you can write a custom type that implements \code{getindex} and \code{setindex!}. You don't have to go crazy and implement ALL the indexing semantics of Julia arrays, just the methods that are relevant to your specific application. In this problem all that is really needed is the indexing semantics of a single element.
 
