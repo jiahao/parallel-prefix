@@ -1,5 +1,8 @@
 \documentclass{sig-alternate}
 
+\usepackage{minted}
+\newcommand{\code}[1]{\texttt{#1}}
+
 \begin{document}
 %
 % --- Author Metadata here ---
@@ -85,7 +88,30 @@ Examples of things we can do prefix reduction for. Many examples, but to just na
 
 - ??? (one more)
 
+The obvious thing to do is a serial reduction. Here is a left-associative version, "foldl" (as it were), that computes partial sums in a left-associative fashion:
+
+\begin{minted}{julia}
+function foldl(y, +)
+    @inbounds for i=2:length(y)
+        y[i] = y[i-1] + y[i]
+    end
+    y
+end
+\end{minted}
+
 Here is a code listing for the special case of 8
+
+\begin{minted}{julia}
+function prefix8!(y, .+)
+    length(y)==8 || error("length 8 only")
+    for i in [2,4,6,8] y[i] = y[i-1] .+ y[i] end
+    for i in [  4,  8] y[i] = y[i-2] .+ y[i] end
+    for i in [      8] y[i] = y[i-4] .+ y[i] end
+    for i in [    6  ] y[i] = y[i-2] .+ y[i] end
+    for i in [ 3,5,7 ] y[i] = y[i-1] .+ y[i] end
+    y
+end
+\end{minted}
 
 It's nice that we can use Unicode
 
@@ -95,15 +121,48 @@ It's nice that the operator is passed as an argument the function. This means th
 
 Here is a picture showing what happens
 
-Here is the general case for serial reduction
-
 Here is the tree branching version in the general case
+
+\begin{minted}{julia}
+function prefix!(y, .+)
+    l=length(y)
+    k=iceil(log2(l))
+    #The "reduce" tree
+    @inbounds for j=1:k, i=2^j:2^j:min(l, 2^k)
+        y[i] = y[i-2^(j-1)] .+ y[i]
+    end
+    #The "broadcast" tree
+    @inbounds for j=(k-1):-1:1, i=3*2^(j-1):2^j:
+            min(l, 2^k)
+        y[i] = y[i-2^(j-1)] .+ y[i]
+    end
+    y
+end
+\end{minted}
 
 This is all serial code and all we have done is to do more work. So far. The point is that this algorithm is parallelizable as we shall see in the next section.
 
 \subsection{Distributed computing using prefix reduction}
 
 In this section we show how the prefix algorithm we wrote above can be run in a distributed computing context without modification. The key is to make use of overloading using the multimethod dispatch feature of Julia.
+
+\begin{minted}{julia}
+#Add a specified number of processors
+addprocs(max(0, Sys.CPU_CORES-nprocs()))
+
+@show nprocs() #Current number of processes
+@show procs()  #List of processes by index
+
+import Base: fetch, length
+fetch(t::Vector) = map(fetch, t) #Vectorize fetch
+
+#Define elementary operations on remote data
+length(r1::RemoteRef)=length(fetch(r1))
++(r1::RemoteRef,r2::RemoteRef)=
+    @spawnat r2.where fetch(r1)+fetch(r2)
+*(r1::RemoteRef,r2::RemoteRef)=
+    @spawnat r2.where fetch(r1)*fetch(r2)
+\end{minted}
 
 Here is a figure summarizing benchmark timings for a sample problem.
 
@@ -117,24 +176,55 @@ We make use of the fact that Julia's arrays provide indexing semantics which can
 
 We note that code of the form
 
-a[i] = a[j] + a[k]
-
+\begin{minted}{julia}
+a[i] = a[j] + a[k]}
+\end{minted}
 is desugared into syntax of the form
 
+\begin{minted}{julia}
 x = getindex(a, j)
 y = getindex(a, k)
 z = x+y
 setindex!(a, z, i)
+\end{minted}
 
 There are much more complicated indexing behaviors but we will not touch on them here. CITE array paper.
 
-The nice thing is you can write a custom type that implements getindex and setindex!. You don't have to go crazy and implement ALL the indexing semantics of Julia arrays, just the methods that are relevant to your specific application. In this problem all that is really needed is the indexing semantics of a single element.
+The nice thing is you can write a custom type that implements \code{getindex} and \code{setindex!}. You don't have to go crazy and implement ALL the indexing semantics of Julia arrays, just the methods that are relevant to your specific application. In this problem all that is really needed is the indexing semantics of a single element.
 
-Now all we have to do is to introduce a custom type that doesn't really do anything but instead records every getindex and setindex! operation performed on it. To satisfy the minimum requirements of the prefix reduction algorithm all we need at the moment is for getindex to return nothing and to define a dummy method for the associative operator + that operates on nothing. nothing is a value of the special singleton type Void, akin to Python's none or Haskell's Nothing.
+Now all we have to do is to introduce a custom type that doesn't really do anything but instead records every \code{getindex} and \code{setindex!} operation performed on it. To satisfy the minimum requirements of the prefix reduction algorithm all we need at the moment is for \code{getindex} to return \code{nothing} and to define a dummy method for the associative operator \code{+} that operates on \code{nothing}. \code{nothing} is a value of the special singleton type \code{Void}, akin to Python's \code{none} or Haskell's \code{Nothing}.
 
 Here is a code listing of implementing the trace type
 
+\begin{minted}{julia}
+import Base: getindex, setindex!, length
+
+type AccessArray
+    length :: Int
+    read :: Vector
+    history :: Vector
+    AccessArray(length)=new(length, {}, {})
+end
+
+length(A::AccessArray)=A.length
+
+function getindex(A::AccessArray, i)
+    push!(A.read, i)
+    nothing
+end
+
+function setindex!(A::AccessArray, x, i)
+    push!(A.history, (A.read, {i}))
+    A.read = {}
+end
+\end{minted}
+
 Here is a figure of the code rendered in Compose. Compose is a Julia package for declarative vector graphics 
+
+\begin{minted}{julia}
+render(prefix8!(AccessArray(8),+))
+render(prefix_serial!(AccessArray(8),+))
+\end{minted}
 
 Here is code that was used to generate the figure.
 
@@ -159,5 +249,61 @@ Also funding.
 
 \bibliographystyle{abbrv}
 \bibliography{prefix}
+
+\appendix
+
+\section{The \code{render} function}
+
+Here are the \code{gate} type and \code{render} function used to generate the figures.
+
+\begin{minted}{julia}
+using Compose
+
+type gate
+    ins :: Vector
+    outs:: Vector
+end
+
+function render(G::gate, x, y, y0; ri=0.1, ro=0.25)
+    ipoints = [(i, y0+ri) for i in G.ins]
+    opoints = [(i, y0+0.5) for i in G.outs]
+    igates  = [circle(i..., ri) for i in ipoints]
+    ogates  = [circle(i..., ro) for i in opoints]
+    lines = [line([i, j]) for i in ipoints,
+                              j in opoints]
+
+    compose(context(units=UnitBox(0.5, 0, x, y+1)),
+        compose(context(), stroke("black"),
+	    fill("white"), igates..., ogates...),
+        compose(context(), linewidth(0.3mm),
+	    stroke("black"), lines...))
+end
+
+function render(A::AccessArray)
+    #Scan to find maximum depth
+    olast = depth = 0
+    for y in A.history
+        (any(y[1] .<= olast)) && (depth += 1)
+        olast = maximum(y[2])
+    end
+    maxdepth = depth
+    
+    olast = depth = 0
+    C = {}
+    for y in A.history
+        (any(y[1] .<= olast)) && (depth += 1)
+        push!(C, render(gate(y...), A.length,
+	    maxdepth, depth))
+        olast = maximum(y[2])
+    end
+    
+    push!(C, compose(context(
+      units=UnitBox(0.5, 0, A.length, 1)),
+      [line([(i,0), (i,1)]) for i=1:A.length]...,
+      linewidth(0.1mm), stroke("grey")))
+    compose(context(), C...)
+end
+\end{minted}
+
 
 \end{document}
