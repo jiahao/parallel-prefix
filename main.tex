@@ -64,6 +64,8 @@ Nobody really understands how to do parallel computing. In practice, a lot of pa
 
 Here is a typical fragment of code that uses MPI
 
+MPI provides the \code{MPI\_scan} primitive, and in MPI-2, also the \code{MPI\_Exscan} primitive for exclusive scan.
+
 How do the GPU Gems chapter showcase parallel prefix?
 
 Can we do better to abstract away the low level communication protocols of a distributed algorithm?
@@ -74,21 +76,39 @@ In Julia we expose how overloading at the operator level parallelism can be used
 
 Julia is a very high level dynamic language designed specifically for technical computing~\cite{Bezanson2012}.
 
-Type system and multiple dispatch. The type system is a resource for programmers, not just a low level compiler system that is hiden from the user. Being able to use types in user written code has turned out to be a great boon for writing technical code.
+Type system and multiple dispatch. The type system is a resource for programmers, not just a low level compiler system that is hidden from the user. Being able to use types in user written code has turned out to be a great boon for writing technical code.
 
 Polymorphism. Julia provides two distinct kinds of polymorphism. One is the paradigm of multimethods and the other is parametric polymorphism. We will focus more on how multimethods are helpful.
 
 \section{The prefix reduction algorithm}
 
-What is prefix reduction? Making use of associativity (or approximate associativity side node about floating point and how it doesn't really matter for most applications)  to regroup operations to provide different execution strategies.
+What is prefix reduction~\cite{Iverson1962,Ladner1980}? Making use of associativity (or approximate associativity side node about floating point and how it doesn't really matter for most applications)  to regroup operations to provide different execution strategies.
 
-There are many applications for the basic prefix sum algorithm~\cite{Blelloch1993}, but to just name a few relevant for technical computing, we can do 
+There are many applications for the basic prefix sum algorithm~\cite{Blelloch1990,Blelloch1993}, but to just name a few relevant for technical computing, we can do 
 
-- matrix multiplication
+- stream compaction ( M. Harris, S. Sengupta, and J. Owens. Parallel prefix sum (scan) with
+CUDA. In H. Nguyen, editor, GPU Gems 3. Addison-Wesley, 2007.)
+
+- parallel sort (Blelloch 1989; N. Satish, M. Harris, and M. Garland. Designing efficient sorting
+algorithms for manycore GPUs. In IPDPS, pages 1–10, 2009.)
+
+- polynomial interpolation ( O. Egecio ˘ glu, E. Gallopoulos, and C. Koc¸. A parallel method ˘
+for fast and practical high-order Newton interpolation. BIT Numerical
+Mathematics, 30:268–288, 1990.)
+
+- list operatioins (Hillis and Steele; Gorlatch 1999)
+
+- solving linear systems of equations involving block tridiagonal matrices (Seal 2012)
 
 - solving recurrences
 
-- ??? (one more)
+- minimal coverings of black-and-white images (Moitra, 1991)
+
+- string matching problems (Chi and Hui, 2005)
+
+- random number generation (Lu, Hou and Chen, 1996)
+
+- simulating finite state machines (Ladner and Fisher 1980)
 
 The obvious thing to do is a serial reduction. Here is a left-associative version, \code{scanl!} (as it were), that computes partial sums in a left-associative fashion:
 
@@ -235,15 +255,47 @@ function setindex!(A::AccessArray, x, i)
 end
 \end{minted}
 
+\section{Proving correctness}
+
+Chong, Donaldson and Ketema
+We present our main theoretical result, that
+correctness of a generic prefix sum of length n can be established
+by showing that the prefix sum is correct for one particular monoid,
+the interval of summations monoid, for one particular input.
+
+A monoid is a set together with an associative binary operation which has an identity element in the set. The insight here is that these are exactly the ingredients needed for the parallel prefix algorithm.
+
+In the paper they prove the correctness with respect to something called the interval of summations monoid on one particular input.
+
+With Julia's polymorphism this is pretty trivial to implement!
+
+Monoidal structure has been used to construct a formal algebra of scan algorithms (Hinze)
+
 \section{Related work}
 
 What do other languages do?
+
+Other languages also provide scan primitives like APL (Iverson 1962), ZPL, MPI.
+
+Other approaches wish they have genericity, like the Thrust C++ library whihc uses crazy C++ functors.
+
+Does Haskell have something using monoids?
+
+Haskell Accelerate for GPU programming. Is it generic? Yes because it works at the code generation level, taking in expressions and emitting longer expressions that compute the prefix sum. In Haskell land these things are criticised for being not statically typed...? (Chakravarty et al, Accelerating Haskell array codes with multicore GPUs) 
+
+Repa doesn't have parallel scan.
+
+In Julia we use duck typing.
 
 Our approach is rather naive and does not account for the complexities in real world implementations, for example possible synchronicity issues produced by higher levels of the broadcast and reduce trees that could result in bus saturation. In principle this can be handled at the scheduler level in the system but we currently don't have the capabilities to do so in Julia.
 
 \section{Conclusions and outlook}
 
 Here is a way to visualize parallel algorithms and study their correctness. First we show that with pure operator polymorphism we can explicitly show the equivalence of a parallel algorithm and a sequential execution that accomplishes the same computations. This can be used to prove the correctness of a parallel algorithm.
+
+Other variants: e.g. Snir, Koc, doubly pipelined (Sanders and Träff), harmonically scheduled (Wang, Nicolau and Siu, 1996), segmented scan (Sengupta 2007).
+
+Generalization to nonassocative binary operations (Chen and Hou, 1992)
 
 Visualization is a byproduct of a correct algorithm. This is a powerful new way to understand how algorithms work.
 
