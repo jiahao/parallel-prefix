@@ -62,10 +62,6 @@ Code reuse for other tasks as well like visualization.
 \section{Introduction}
 Nobody really understands how to do parallel computing. In practice, a lot of parallel computing code is mucky and gross because you have to embed all sorts of low level MPI initialization and communication primitives in your code.
 
-Here is a typical fragment of code that uses MPI
-
-MPI provides the \code{MPI\_scan} primitive, and in MPI-2, also the \code{MPI\_Exscan} primitive for exclusive scan.
-
 How do the GPU Gems chapter showcase parallel prefix?
 
 Can we do better to abstract away the low level communication protocols of a distributed algorithm?
@@ -82,33 +78,28 @@ Polymorphism. Julia provides two distinct kinds of polymorphism. One is the para
 
 \section{The prefix reduction algorithm}
 
-What is prefix reduction~\cite{Iverson1962,Ladner1980}? Making use of associativity (or approximate associativity side node about floating point and how it doesn't really matter for most applications)  to regroup operations to provide different execution strategies.
+What is prefix reduction~\cite{Iverson1962,Ladner1980,Brent1982}? Making use of associativity (or approximate associativity side node about floating point and how it doesn't really matter for most applications)  to regroup operations to provide different execution strategies.
 
+Parallel scan is one of the ur-algorithms for parallel computing~\cite{Kruskal1985,Blelloch1989,Bell2012}.
 There are many applications for the basic prefix sum algorithm~\cite{Blelloch1990,Blelloch1993}, but to just name a few relevant for technical computing, we can do 
 
-- stream compaction ( M. Harris, S. Sengupta, and J. Owens. Parallel prefix sum (scan) with
-CUDA. In H. Nguyen, editor, GPU Gems 3. Addison-Wesley, 2007.)
+- stream compaction~\cite{Harris2007}
 
-- parallel sort (Blelloch 1989; N. Satish, M. Harris, and M. Garland. Designing efficient sorting
-algorithms for manycore GPUs. In IPDPS, pages 1–10, 2009.)
+- parallel sort~\cite{Blelloch1989}
 
-- polynomial interpolation ( O. Egecio ˘ glu, E. Gallopoulos, and C. Koc¸. A parallel method ˘
-for fast and practical high-order Newton interpolation. BIT Numerical
-Mathematics, 30:268–288, 1990.)
+- polynomial interpolation~\cite{Egecioglu1990}
 
-- list operatioins (Hillis and Steele; Gorlatch 1999)
+- list operations~\cite{Hillis1986,Gorlatch1999}
 
-- solving linear systems of equations involving block tridiagonal matrices (Seal 2012)
+- solving linear systems of equations involving block tridiagonal matrices~\cite{Mathias1995}
 
-- solving recurrences
+- minimal coverings of black-and-white images~\cite{Moitra1991}
 
-- minimal coverings of black-and-white images (Moitra, 1991)
+- string matching problems~\cite{Chi1992}
 
-- string matching problems (Chi and Hui, 2005)
+- random number generation~\cite{Lu1996}
 
-- random number generation (Lu, Hou and Chen, 1996)
-
-- simulating finite state machines (Ladner and Fisher 1980)
+- simulating finite state machines~\cite{Ladner1980}
 
 The obvious thing to do is a serial reduction. Here is a left-associative version, \code{scanl!} (as it were), that computes partial sums in a left-associative fashion:
 
@@ -257,7 +248,7 @@ end
 
 \section{Proving correctness}
 
-Chong, Donaldson and Ketema
+\cite{Chong2014}
 We present our main theoretical result, that
 correctness of a generic prefix sum of length n can be established
 by showing that the prefix sum is correct for one particular monoid,
@@ -269,21 +260,21 @@ In the paper they prove the correctness with respect to something called the int
 
 With Julia's polymorphism this is pretty trivial to implement!
 
-Monoidal structure has been used to construct a formal algebra of scan algorithms (Hinze)
+Monoidal structure has been used to construct a formal algebra of scan algorithms~\cite{Hinze2004}
 
 \section{Related work}
 
 What do other languages do?
 
-Other languages also provide scan primitives like APL (Iverson 1962), ZPL, MPI.
+Other languages also provide scan primitives like APL~\cite{Iverson1962}, ZPL~\cite{Chamberlain2000}.
 
-Other approaches wish they have genericity, like the Thrust C++ library whihc uses crazy C++ functors.
+MPI provides the \code{MPI\_scan} primitive~\cite{Snir1995,MPI}, and in MPI-2, also the \code{MPI\_Exscan} primitive for exclusive scan.~\cite{MPI2}
+
+Other approaches wish they have genericity, like the Thrust C++ library which uses crazy C++ functors~\cite{Bell2012}.
 
 Does Haskell have something using monoids?
 
-Haskell Accelerate for GPU programming. Is it generic? Yes because it works at the code generation level, taking in expressions and emitting longer expressions that compute the prefix sum. In Haskell land these things are criticised for being not statically typed...? (Chakravarty et al, Accelerating Haskell array codes with multicore GPUs) 
-
-Repa doesn't have parallel scan.
+Haskell Accelerate for GPU programming~\cite{Chakravarty2011}. Is it generic? Yes because it works at the code generation level, taking in expressions and emitting longer expressions that compute the prefix sum. In Haskell land these things are criticised for being not statically typed...?
 
 In Julia we use duck typing.
 
@@ -293,9 +284,9 @@ Our approach is rather naive and does not account for the complexities in real w
 
 Here is a way to visualize parallel algorithms and study their correctness. First we show that with pure operator polymorphism we can explicitly show the equivalence of a parallel algorithm and a sequential execution that accomplishes the same computations. This can be used to prove the correctness of a parallel algorithm.
 
-Other variants: e.g. Snir, Koc, doubly pipelined (Sanders and Träff), harmonically scheduled (Wang, Nicolau and Siu, 1996), segmented scan (Sengupta 2007).
+Other variants: e.g. Snir~\cite{Kruskal1985}, Koc~\cite{Egecioglu1992}, doubly pipelined~\cite{Sanders2006}, harmonically scheduled~\cite{Wang1996}, segmented scan~\cite{Sengupta2007}.
 
-Generalization to nonassocative binary operations (Chen and Hou, 1992)
+Generalization to nonassocative binary operations~\cite{Chen1992}
 
 Visualization is a byproduct of a correct algorithm. This is a powerful new way to understand how algorithms work.
 
@@ -364,6 +355,5 @@ function render(A::AccessArray)
     compose(context(), C...)
 end
 \end{minted}
-
 
 \end{document}
