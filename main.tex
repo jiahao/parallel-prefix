@@ -2,8 +2,10 @@
 
 %Nice code listings
 \usepackage{minted}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
 \newcommand{\code}[1]{\texttt{#1}}
-
+\newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
 \begin{document}
 %
 % --- Author Metadata here ---
@@ -167,11 +169,17 @@ function prefix!(y, .+)
 end
 \end{minted}
 
+This is the classic algorithm of Brent and Kung~\cite{Brent1982}.
+
 This is all serial code and all we have done is to do more work. So far. The point is that this algorithm is parallelizable as we shall see in the next section.
 
-\subsection{Distributed computing using prefix reduction}
+\section{Distributed computing using prefix reduction}
 
 In this section we show how the prefix algorithm we wrote above can be run in a distributed computing context without modification. The key is to make use of overloading using the multimethod dispatch feature of Julia.
+
+\subsection{Distributed computing in Julia}
+
+\subsection{Parallel prefix}
 
 \begin{minted}{julia}
 #Add a specified number of processors
@@ -191,9 +199,18 @@ length(r1::RemoteRef)=length(fetch(r1))
     @spawnat r2.where fetch(r1)*fetch(r2)
 \end{minted}
 
-Here is a figure summarizing benchmark timings for a sample problem.
+It is straightforward to show from the definition of \code{prefix!} that the first tree on $p$ processors has depth $\floor{\log_2 p}$ and the second tree has depth $1 + \floor{\log_2 \frac p 3}$. Since the serial code \code{scanl!} has depth $p-1$, the theoretical speedup ratio, ignoring communication overhead, is therefore
 
-Limitations: we specifically took out the overhead needed for distributing the initial data out of the timings, so that we can focus specifically on the time cost of the actual prefix reduction algorithm.
+\begin{equation}
+    \frac {p-1} {\floor{\log_2 p} + 1 + \floor{\log_2 \frac p 3}}.
+\end{equation}
+
+Here is a figure summarizing benchmark timings for a sample problem. We generate $p$ square random matrices with Gaussian entries of size $n = 4096$ and time how long it takes to multiply these matrices together.
+
+\begin{figure}
+\end{figure}
+
+We specifically left out the time needed to broadcast the data to the remote processes, so as to focus only on the execution times of the kernels of interest. We also took care to disable the garbage collector. Julia, like many high-level dynamic languages, provides a garbage collector to aid in memory management. Julia 0.3.1 uses a simple stop-the-world, non-moving, precise mark and sweep garbage collector, where deallocation and finalization of garbage objects may not happen immediately after objects become unused\footnote{The code for Julia's garbage collector may be found at \url{https://github.com/JuliaLang/julia/blob/275afc8b74b9c6ea5d34aefb8085525ff5dfc239/src/gc.c}}~\cite{McCarthy1960}. Therefore, it becomes important to factor out the possible effects of stop-the-world garbage collection. We explicitly disabled garbage collection with \code{gc\_disable()} before running each kernel, then reenabled garbage collection with \code{gc\_enable()} after running each kernel. As an additional precaution, we timed the kernels multiple times and took the minimum time for each kernel so as to reduce fluctuations due to general nondeterministic delays.
 
 \subsection{Operator overloading for visualization}
 
