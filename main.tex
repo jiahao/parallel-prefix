@@ -288,19 +288,21 @@ end
 
 \section{Proving correctness}
 
-\cite{Chong2014}
-We present our main theoretical result, that
-correctness of a generic prefix sum of length n can be established
-by showing that the prefix sum is correct for one particular monoid,
-the interval of summations monoid, for one particular input.
+In Section~\ref{sec:prefix} we introduced several different kernels to compute
+scans. Each of these kernels have exactly the same function signature \code{(y,
++)} representing the data \code{y} and associative binary operator \code{+}.
+These two ingredients for the scan algorithm turn out to have exactly the
+algebraic structure of a monoid.
 
-A monoid is a set together with an associative binary operation which has an identity element in the set. The insight here is that these are exactly the ingredients needed for the parallel prefix algorithm.
-
-In the paper they prove the correctness with respect to something called the interval of summations monoid on one particular input.
+Recent theoretical work has taken advantage of the monoidal structure. First,
+the monoidal structure has been used to construct a formal algebra of scan
+algorithms to understand the computational equivalence between many different
+execution trees.~\cite{Hinze2004} More recent work has taken advantage of the
+monoidal structure to show that correctness can be established simply by
+showing that a given prefix sum kernel is correct for one particular monoid,
+called the interval of summations monoid, on one specific input set.~\cite{Chong2014}
 
 With Julia's polymorphism this is pretty trivial to implement!
-
-Monoidal structure has been used to construct a formal algebra of scan algorithms~\cite{Hinze2004}
 
 \section{Related work}
 
