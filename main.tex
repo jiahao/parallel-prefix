@@ -79,6 +79,7 @@ Type system and multiple dispatch. The type system is a resource for programmers
 Polymorphism. Julia provides two distinct kinds of polymorphism. One is the paradigm of multimethods and the other is parametric polymorphism. We will focus more on how multimethods are helpful.
 
 \section{The prefix reduction algorithm}
+\label{sec:prefix}
 
 What is prefix reduction~\cite{Iverson1962,Ladner1980,Brent1982}? Making use of associativity (or approximate associativity side node about floating point and how it doesn't really matter for most applications)  to regroup operations to provide different execution strategies.
 
@@ -103,7 +104,9 @@ There are many applications for the basic prefix sum algorithm~\cite{Blelloch199
 
 - simulating finite state machines~\cite{Ladner1980}
 
-The obvious thing to do is a serial reduction. Here is a left-associative version, \code{scanl!} (as it were), that computes partial sums in a left-associative fashion:
+The obvious thing to do is a serial reduction. Here is a left-associative
+version, conventionally named \code{scanl!}, that computes partial sums in a
+left-associative fashion:
 
 \begin{minted}{julia}
 function scanl!(y, +)
@@ -114,7 +117,22 @@ function scanl!(y, +)
 end
 \end{minted}
 
-Here is a code listing for the special case of 8
+Julia allows us to specify at a highly abstract level the data \code{y} and the
+associative operator \code{+} as inputs to the \code{scanl!}. The ability to
+pass an argument named \code{+} allows us to write the scan kernel as a higher
+order function with a redefined "addition" operator within the scope of the
+function body. The infix syntax for \code{+} allows us to generalize the notion
+of partial sums transparently to any associative operator. Julia's ability to
+support this form of operator polymorphism had previously been used to support
+operations on $(\max,+)$-tropical semirings.~\cite{Shah2013}
+(Note that the function does not check if the operator is truly
+associative; rather, we leave the responsibility of providing an associative
+function to the user, in line with the generally permissive philosophy of
+dynamic languages.)
+
+Now let's look at a parallel prefix algorithm implementing the same code.  For
+simplicity, we present first the special case of parallel prefix for $n=8$ data
+points.
 
 \begin{minted}{julia}
 function prefix8!(y, .+)
