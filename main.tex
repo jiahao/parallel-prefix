@@ -104,14 +104,24 @@ There are many applications for the basic prefix sum algorithm~\cite{Blelloch199
 
 	\item random number generation~\cite{Lu1996}
 
-The obvious thing to do is a serial reduction. Here is a left-associative
-version, conventionally named \code{scanl!}, that computes partial sums in a
-left-associative fashion:
 	\item simulating finite state machines~\cite{Ladner1980}
 \end{itemize}
 
+The prefix sum problem, in its most basic form, is to compute from some initial
+data \code{y} the cumulative partial sums \code{z} such that:
+
 \begin{minted}{julia}
-function scanl!(y, +)
+z[1] = y[1]
+z[2] = y[1] + y[2]
+z[3] = y[1] + y[2] + y[3]
+...
+\end{minted}
+
+The obvious algorithm to compute the cumulative sums is the left-associative
+algorithm \code{prefix\_serial!}:
+
+\begin{minted}{julia}
+function prefix_serial!(y, +)
     @inbounds for i=2:length(y)
         y[i] = y[i-1] + y[i]
     end
