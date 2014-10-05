@@ -220,53 +220,142 @@ function prefix!(y, .+)
 end
 \end{minted}
 
-This is the classic algorithm of Brent and Kung~\cite{Brent1982}.
-
-This is all serial code and all we have done is to do more work. So far. The point is that this algorithm is parallelizable as we shall see in the next section.
+Again, at this point we have only written serial code that introduces more
+computations than the naive algorithm \code{prefix\_serial!}. However, we will
+argue in Section~\ref{sec:parallel-prefix} that the exact same code in
+\code{prefix!} can be reused for parallel execution which can achieve speedup
+over \code{prefix\_serial!}.
 
 \section{Distributed computing using prefix reduction}
 
-In this section we show how the prefix algorithm we wrote above can be run in a distributed computing context without modification. The key is to make use of overloading using the multimethod dispatch feature of Julia.
+In this section we show how the prefix algorithm we wrote above can be run in a
+distributed computing context without modification. The key is to make use of
+overloading using the multimethod dispatch feature of Julia.
 
-\subsection{Distributed computing in Julia}
+Julia provides native support for multiprocess distributed computing based on
+one-sided message passing. The basic functionality is provided by the
+\code{remotecall} function, which initiates a nonblocking remote function call
+and returns an explicit future (a remote pointer of type \code{RemoteRef})
+whose value is retrieved by the \code{fetch} function, which is a blocking
+operation. Julia also provides more convenient syntax for \code{remotecall}
+with the \code{@spawnat} macro.
 
-\subsection{Parallel prefix}
+We can use Julia's multiple dispatch feature to define associative operators
+which act on remote data rather than local data. Julia's generic function
+system allows new methods which act on remote data to be defined for functions
+like \code{+} and \code{*}, which are simply functions for which the parser
+supports infix notation. In effect, we can overload addition and multiplication
+(or in general any binary associative function) transparently to work on remote
+data.
+
+For example, we can run the following code:
 
 \begin{minted}{julia}
-#Add a specified number of processors
+#Start a Julia process on every available core
+#addprocs(n) adds n processors
+#Sys.CPU_CORES is the total number of available
+#CPU cores
+#nprocs() returns the total number of Julia
+#processes attached to the current master
+#(including itself)
 addprocs(max(0, Sys.CPU_CORES-nprocs()))
 
-@show nprocs() #Current number of processes
-@show procs()  #List of processes by index
-
-import Base: fetch, length
-fetch(t::Vector) = map(fetch, t) #Vectorize fetch
+import Base.* #Extend existing generic function
 
 #Define elementary operations on remote data
-length(r1::RemoteRef)=length(fetch(r1))
-+(r1::RemoteRef,r2::RemoteRef)=
-    @spawnat r2.where fetch(r1)+fetch(r2)
 *(r1::RemoteRef,r2::RemoteRef)=
     @spawnat r2.where fetch(r1)*fetch(r2)
 \end{minted}
 
-It is straightforward to show from the definition of \code{prefix!} that the first tree on $p$ processors has depth $\floor{\log_2 p}$ and the second tree has depth $1 + \floor{\log_2 \frac p 3}$. Since the serial code \code{scanl!} has depth $p-1$, the theoretical speedup ratio, ignoring communication overhead, is therefore
+This one method definition defines multiplication on remote data by
+\code{fetch}ing the remote data from the process containing the data of
+\code{r1}, copying the data of \code{fetch(r1)} to the memory space of the
+process containing the data of \code{r2} whose identity is given by
+\code{r2.where}. The process \code{r2.where} now contains local copies of both
+operands. Assuming that the local data are of type \code{T}, the Julia code
+then invokes another round of method dispatch based on the method signature
+\code{*(::T, ::T)}. In this way, any data type \code{T} that supports
+multiplication will now also support remote multiplication, regardless of
+whether the data are scalar numbers, $N\times N$ matrices, or something else
+entirely.
+
+The main point of this paper is that the very same function \code{prefix!}
+which was executed in serial in previous sections will now run in parallel,
+simply by passing to it an associative operator over remote data rather than
+local data. Julia's multimethods and multiple dispatch semantics allow
+operations on remote data to share the same syntax as their corresponding
+operations on local data, thus removing any syntactic difference between remote
+and local operations. The new method for \code{*} defines new behavior
+specific to \code{RemoteRef}s, which are Julia's explicit futures. With this
+new method defined in the current scope, running \code{prefix!(y, *)} will
+automatically compute cumulative products on remote data if \code{y} is an
+array of \code{RemoteRef}s. Julia will automatically dispatch on the
+\code{*(r1::RemoteRef,r2::RemoteRef)} method within the inner loops of
+\code{prefix!} by comparing the types of the data elements of \code{y} with
+method signatures defined for \code{*}.
+
+\subsection{Parallel prefix}
+\label{sec:parallel-prefix}
+
+We now run the \code{prefix!} function in parallel. The remote operations
+\code{*(r1::RemoteRef,r2::RemoteRef)} contain blocking operations implied by
+\code{fetch(r1)}, and Julia dynamically schedules all remote operations
+simultaneously so long as they are not waiting on the result of a \code{fetch}
+operation. The scheduling and dependency structure of \code{prefix!} thus
+results in all operations in each stage of the tree being executed
+simultaneously. Neglecting overhead from communication latency and bandwidth,
+the total execution time of \code{prefix!} depends only on the depth of the
+trees defined by the inner loops of \code{prefix!} and visualized in
+Figure~\ref{fig:gates}.
+
+From the indices of each loop in \code{prefix!} for $l$ data points, the first
+tree has at least one operation at depth $k$ for $l \ge 2^k$, and therefore the
+depth of the entire tree is $k = \floor{\log_2 l}$. Similarly, the second tree
+has at least one operation at depth $k$ for $l \ge 3\cdot2^{k-1}$, and hence
+has depth $k = 1 + \floor{log_2 \frac l 3}$. Adding these depths and assuming
+that we distribute one datum per processor, we therefore obtain the theoretical
+speedup ratio for $p$ processors running \code{prefix!} over
+\code{prefix\_serial!} as:
 
 \begin{equation}
     r (p) = \frac {p-1} {\floor{\log_2 p} + 1 + \floor{\log_2 \frac p 3}}.
     \label{eq:scaling-theory}
 \end{equation}
 
-Here is a figure summarizing benchmark timings for a sample problem. We generate $p$ square random matrices with Gaussian entries of size $n = 4096$ and time how long it takes to multiply these matrices together.
+Figure~\ref{fig:scaling} summarizing benchmark timings for a sample problem
+where we generated $p$ square random matrices with Gaussian entries of size $n
+= 4096$ and timed how long it took to multiply these matrices together.  We
+specifically left out the time needed to broadcast the data to the remote
+processes, so as to focus only on the execution times of the kernels of
+interest. We also took care to disable the garbage collector. Julia, like many
+high-level dynamic languages, provides a garbage collector to aid in memory
+management. Julia 0.3.1 uses a simple stop-the-world, non-moving, precise mark
+and sweep garbage collector, where deallocation and finalization of garbage
+objects may not happen immediately after objects become unused\footnote{The
+code for Julia's garbage collector may be found at
+\url{https://github.com/JuliaLang/julia/blob/275afc8b74b9c6ea5d34aefb8085525ff5dfc239/src/gc.c}}~\cite{McCarthy1960}.
+Therefore, it becomes important to factor out the possible effects of
+stop-the-world garbage collection. We explicitly disabled garbage collection
+with \code{gc\_disable()} before running each kernel, then reenabled garbage
+collection with \code{gc\_enable()} after running each kernel. As an additional
+precaution, we timed the kernels multiple times and took the minimum time for
+each kernel so as to reduce fluctuations due to general nondeterministic
+delays.
 
 \begin{figure}
   \centering
   \includegraphics{scaling}
-  \caption{Weak scaling of the prefix sum kernels. Speedup ratios are the timings for \code{prefix!} over \code{scanl!}. Plotted also as a solid line is the theoretical speedup ratios $r(p)$ of Eq.~\ref{eq:scaling-theory}.}
+  \caption{Weak scaling of the prefix sum kernels. Speedup ratios are the
+  timings for \code{prefix!} over \code{prefix\_serial!}. Plotted as a solid
+  line is the theoretical speedup ratio $r(p)$ of
+  Equation~\ref{eq:scaling-theory}.  This figure was rendered in Gadfly, a
+  Julia package for native plotting and
+  visualization~\cite{Gadfly.jl}.}
   \label{fig:scaling}
 \end{figure}
 
-We specifically left out the time needed to broadcast the data to the remote processes, so as to focus only on the execution times of the kernels of interest. We also took care to disable the garbage collector. Julia, like many high-level dynamic languages, provides a garbage collector to aid in memory management. Julia 0.3.1 uses a simple stop-the-world, non-moving, precise mark and sweep garbage collector, where deallocation and finalization of garbage objects may not happen immediately after objects become unused\footnote{The code for Julia's garbage collector may be found at \url{https://github.com/JuliaLang/julia/blob/275afc8b74b9c6ea5d34aefb8085525ff5dfc239/src/gc.c}}~\cite{McCarthy1960}. Therefore, it becomes important to factor out the possible effects of stop-the-world garbage collection. We explicitly disabled garbage collection with \code{gc\_disable()} before running each kernel, then reenabled garbage collection with \code{gc\_enable()} after running each kernel. As an additional precaution, we timed the kernels multiple times and took the minimum time for each kernel so as to reduce fluctuations due to general nondeterministic delays.
+The empirical timings shown in Figure~\ref{fig:scaling} show excellent
+agreement with the theoretical prediction of Equation~\ref{eq:scaling-theory}.
 
 \subsection{Operator overloading for visualization}
 
