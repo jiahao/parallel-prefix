@@ -6,6 +6,12 @@
 \usepackage{url}
 \newcommand{\code}[1]{\texttt{#1}}
 \newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
+
+%Patch problems with sig-alternate template
+%See: http://tex.stackexchange.com/questions/87891/typewriter-text-in-sections-with-acm-sig-alternate-document-class 
+\DeclareRobustCommand{\ttfamily}{\fontencoding{T1}\fontfamily{lmtt}\selectfont}
+\DeclareRobustCommand\sectt[1]{{\fontsize{13}{12}\bfseries\ttfamily#1}}
+
 \begin{document}
 %
 % --- Author Metadata here ---
