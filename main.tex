@@ -86,27 +86,29 @@ What is prefix reduction~\cite{Iverson1962,Ladner1980,Brent1982}? Making use of 
 Parallel scan is one of the ur-algorithms for parallel computing~\cite{Kruskal1985,Blelloch1989,Bell2012}.
 There are many applications for the basic prefix sum algorithm~\cite{Blelloch1990,Blelloch1993}, but to just name a few relevant for technical computing, we can do 
 
-- stream compaction~\cite{Harris2007}
+\begin{itemize}
 
-- parallel sort~\cite{Blelloch1989}
+	\item stream compaction~\cite{Harris2007}
 
-- polynomial interpolation~\cite{Egecioglu1990}
+	\item parallel sort~\cite{Blelloch1989}
 
-- list operations~\cite{Hillis1986,Gorlatch1999}
+	\item polynomial interpolation~\cite{Egecioglu1990}
 
-- solving linear systems of equations involving block tridiagonal matrices~\cite{Mathias1995}
+	\item list operations~\cite{Hillis1986,Gorlatch1999}
 
-- minimal coverings of black-and-white images~\cite{Moitra1991}
+	\item solving linear systems of equations involving block tridiagonal matrices~\cite{Mathias1995}
 
-- string matching problems~\cite{Chi1992}
+	\item minimal coverings of black-and-white images~\cite{Moitra1991}
 
-- random number generation~\cite{Lu1996}
+	\item string matching problems~\cite{Chi1992}
 
-- simulating finite state machines~\cite{Ladner1980}
+	\item random number generation~\cite{Lu1996}
 
 The obvious thing to do is a serial reduction. Here is a left-associative
 version, conventionally named \code{scanl!}, that computes partial sums in a
 left-associative fashion:
+	\item simulating finite state machines~\cite{Ladner1980}
+\end{itemize}
 
 \begin{minted}{julia}
 function scanl!(y, +)
