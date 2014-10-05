@@ -238,7 +238,8 @@ one-sided message passing. The basic functionality is provided by the
 and returns an explicit future (a remote pointer of type \code{RemoteRef})
 whose value is retrieved by the \code{fetch} function, which is a blocking
 operation. Julia also provides more convenient syntax for \code{remotecall}
-with the \code{@spawnat} macro.
+with the \code{@spawn} and \code{@spawnat} macros, which automatically rewrite
+Julia expressions into \code{remotecall} function calls.
 
 We can use Julia's multiple dispatch feature to define associative operators
 which act on remote data rather than local data. Julia's generic function
