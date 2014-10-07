@@ -554,8 +554,8 @@ reduces to writing the assertion:
 \end{minted}
 
 Attempting to verify an incorrect kernel results in at least one \code{Tee}
-being produced in the program state, thus precipitating type conversion errors
-of the form
+being produced during the computation, thus poisoning the program state and
+precipitating type conversion errors of the form
 
 \begin{minted}{jlcon}
 `convert` has no method matching
