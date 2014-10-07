@@ -7,6 +7,9 @@
 \newcommand{\code}[1]{\texttt{#1}}
 \newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
 
+%Definition listing
+\usepackage{amsmath}
+\newtheorem{definition}{Definition}
 %Patch problems with sig-alternate template
 %See: http://tex.stackexchange.com/questions/87891/typewriter-text-in-sections-with-acm-sig-alternate-document-class 
 \DeclareRobustCommand{\ttfamily}{\fontencoding{T1}\fontfamily{lmtt}\selectfont}
@@ -429,9 +432,142 @@ algorithms to understand the computational equivalence between many different
 execution trees.~\cite{Hinze2004} More recent work has taken advantage of the
 monoidal structure to show that correctness can be established simply by
 showing that a given prefix sum kernel is correct for one particular monoid,
-called the interval of summations monoid, on one specific input set.~\cite{Chong2014}
+called the interval monoid, which formalizes the notion of indexing the
+subarrays being accessed over the course of the prefix sum
+computation.~\cite{Chong2014}
 
-With Julia's polymorphism this is pretty trivial to implement!
+For convenience, we quote the relevant definition:
+
+\begin{definition}{((4.3) of \cite{Chong2014})}
+\label{def:intervalmonoid}
+	
+The \textit{interval monoid} $I$ has the elements
+
+\begin{equation}
+	\mathbb S_I = \left\{ (i_1, i_2) \in \mathrm{Int} \times \mathrm{Int} \;\vert\; i_1 \le i_2  \right\} \cup \{\mathbf 1_I, \top \}
+\end{equation}
+%
+and a binary operator $\oplus_I$ defined by:
+
+\begin{subequations}
+\begin{align}
+	\mathbf 1_I \oplus_I x = x \oplus_I \mathbf 1_I &= x \textrm{ for all } x \in \mathbb S_I \\
+	\top \oplus_I x = x \oplus_I \top &= \top \textrm{ for all } x \in \mathbb S_I \\
+	(i_1, i_2) \oplus_I (i_3, i_4) &= \begin{cases} (i_1, i_4) &\textrm{if } i_2 + 1 = i_3 \\
+		\top &\textrm{otherwise.}
+\end{cases}
+\label{eq:intervalplus}
+\end{align}
+\end{subequations}
+
+\end{definition}
+
+The elements $(i, j) \in \mathbb S_I$ are abstractions of array indexing
+operations which are array slices; they are produced by Julia code like
+\code{y[i:j]} where \code{i:j} is of type \code{UnitRange} and is a range of
+unit stride representing the set $\{i, i+1, \dots, j\}$. The definition of
+$\oplus_I$ in \eqref{eq:intervalplus} formalizes the notion of combining the
+results from the subarrays \code{y[i:j]} and \code{y[j+1:k]} to get the result
+for the subarray \code{y[i:k]}.  The identity element $\mathrm 1$ formalizes
+an empty interval, while the annihilator $\top$ encodes noncontiguous ranges,
+which correspond to partial sums which cannot be represented by slicing with a
+\code{UnitRange} of the form \code{i:j}.
+
+The key insight of \cite{Chong2014} is that correct computations of prefix sums
+cannot generate noncontiguous elements $\top$, otherwise they would by
+definition violate the prefixing property \code{prefix!(y[1:j+1], +) =
+prefix!(y[1:j], +) + y[j+1]}.\\
+From this insight, the authors of \cite{Chong2014} derive two correctness
+results:
+
+\begin{enumerate}
+		
+\item 	A function that computes the prefix sum in serial is correct for $n$
+	data points if and only if that function computes the correct answer
+	for the input \\
+	$\left(\left((1, 1), (2, 2), \dots, (n, n)\right),
+	\oplus_I\right)$\footnote{Our presentation differs from the original
+	only in that Julia arrays are 1-based, in contrast to C/OpenCL arrays,
+	which are 0-based.} Furthermore, the correct answer is
+	$\left((1, 1), (1, 2), \dots, (1, n) \right)$, as the $k$th partial sum
+	involves summing the subarray $y[1:k]$.
+	
+\item	A function that computes the prefix sum in parallel is correct if it is
+	free of data races and its equivalent serialization has the correctness
+	property above.
+
+\end{enumerate}
+
+We can use these results directly to verify the correctness of the Julia code
+we have written in earlier sections. By construction, the \code{fetch}es on
+\code{RemoteRefs} insert implicit synchronization barriers and thus the
+parallel code is free of data races. Thus only the serial correctness result
+needs to be verified explicitly.
+
+Julia allows us to encode the interval monoid directly from the definition. A
+convenient feature of Julia is the ability to use abstract data types as
+singleton values: Julia types are values, and types can be used as singleton
+values using the \code{Type{T}} construct. Thus, the domain $\mathbb S_I$ can
+be written as a Julia type \code{S}, which is the \code{Union} (type union) of:
+
+\begin{itemize}
+	\item \code{UnitRange},
+	\item \code{Type\{Id\}}, the identity singleton $\mathbf 1_I$, and
+	\item \code{Type\{Tee\}}, the annihilator singleton $\top$.
+\end{itemize}
+
+With this mapping of the abstract interval monoid domain $\mathbb S_I$ onto
+Julia types, the definition \eqref{def:intervalmonoid} translates directly into
+the following code:
+
+\begin{minted}[mathescape,texcl]{julia}
+#S is the interval monoid of Definition \ref{def:intervalmonoid}
+abstract Tee #$\top$
+abstract Id  #$\mathbf 1_I$
+typealias S Union(UnitRange, Type{Tee}, Type{Id}) #$\mathbb S_I$
+
+#$\oplus_I$
++(I::UnitRange, J::UnitRange) = 
+    I.stop+1==J.start ? (I.start:J.stop) : Tee
++(::Type{Id}, ::Type{Id}) = Id
++(I::S, ::Type{Id}) = I
++(::Type{Id}, I::S) = I
++(::Type{Tee}, ::Type{Tee}) = Tee
++(::Type{Id}, ::Type{Tee}) = Tee
++(::Type{Tee}, ::Type{Id}) = Tee
++(I::S, ::Type{Tee}) = Tee
++(::Type{Tee}, I::S) = Tee
+\end{minted}
+
+Some additional methods for \code{+} are needed to resolve method ambiguities
+in Julia, which currently resolves method dispatch only on the types of the
+input arguments and not on the output type.
+
+Verifying some function \code{kernel} for the problem size \code{n} simply
+reduces to writing the assertion:
+
+\begin{minted}{julia}
+#Test that kernel is correct for problem size n
+@assert kernel([k:k for k=1:n], +) == [1:k for k=1:n]
+\end{minted}
+
+Attempting to verify an incorrect kernel results in at least one \code{Tee}
+being produced in the program state, thus precipitating type conversion errors
+of the form
+
+\begin{minted}{jlcon}
+`convert` has no method matching
+convert(::Type{UnitRange}, ::Type{Tee})
+\end{minted}
+%
+which arise from the inability of noncontinuous ranges to be expressed as
+\code{UnitRange}s.
+
+Julia thus allows for the same kernels used for computation to be verified
+directly without any rewriting or translation, simply by exploiting the
+polymorphism arising from the generic nature of prefix sum kernels, and
+composing such generic functions with appropriate choices of input data types
+and associative operators over those types.
 
 \section{Related work}
 
