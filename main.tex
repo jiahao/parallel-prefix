@@ -519,31 +519,39 @@ be written as a Julia type \code{S}, which is the \code{Union} (type union) of:
 \end{itemize}
 
 With this mapping of the abstract interval monoid domain $\mathbb S_I$ onto
-Julia types, the definition \eqref{def:intervalmonoid} translates directly into
-the following code:
+Julia types, Definition~\ref{def:intervalmonoid} translates directly into the
+following code:
 
 \begin{minted}[mathescape,texcl]{julia}
 #S is the interval monoid of Definition \ref{def:intervalmonoid}
-abstract Tee #$\top$
+abstract Tee # $\top$
 abstract Id  #$\mathbf 1_I$
 typealias S Union(UnitRange, Type{Tee}, Type{Id}) #$\mathbb S_I$
 
 #$\oplus_I$
-+(I::UnitRange, J::UnitRange) = 
++(I::UnitRange, J::UnitRange) = #$+_1$ 
     I.stop+1==J.start ? (I.start:J.stop) : Tee
-+(::Type{Id}, ::Type{Id}) = Id
-+(I::S, ::Type{Id}) = I
-+(::Type{Id}, I::S) = I
-+(::Type{Tee}, ::Type{Tee}) = Tee
-+(::Type{Id}, ::Type{Tee}) = Tee
-+(::Type{Tee}, ::Type{Id}) = Tee
-+(I::S, ::Type{Tee}) = Tee
-+(::Type{Tee}, I::S) = Tee
++(::Type{Id}, ::Type{Id}) = Id  #$+_2$
++(I::S, ::Type{Id}) = I         #$+_3$
++(::Type{Id}, I::S) = I         #$+_4$
++(I::S, J::S) = Tee             #$+_5$
 \end{minted}
 
-Some additional methods for \code{+} are needed to resolve method ambiguities
-in Julia, which currently resolves method dispatch only on the types of the
-input arguments and not on the output type.
+The Julia method dispatcher chooses the most specific method that matches the
+type signature of a given set of arguments~\cite{Bezanson2012}. Thus even
+though \code{+} may appear to be ambiguously defined for inputs with the type
+signature \code{(::UnitRange, ::UnitRange)}, which matches both $+_1$ and $+_5$
+methods, Julia resolves the ambiguity in favor of $+_1$ which has the more
+specific type signature, since by definition \code{UnitRange} is a subtype of
+\code{S}. However, the method $+_2$ is necessary to resolve the ambiguity
+between $+_3$ and $+_4$: Julia uses symmetric multiple dispatch, so that the
+positions of the arguments are not used to resolve
+ambiguities.~\cite{Bezanson2012}. As a result, inputs with type signature
+\code{(::Type\{Id\}, ::Type\{Id\})}, which lie in the intersection of the type
+signatures of $+_3$ and $+_4$, have to be special-cased. Bearing these rules in
+mind, it is straightforward to verify that the definition of \code{+} in the
+code block above is equivalent to that of $\oplus_I$ in
+Definition~\ref{def:intervalmonoid}.
 
 Verifying some function \code{kernel} for the problem size \code{n} simply
 reduces to writing the assertion:
