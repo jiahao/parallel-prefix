@@ -201,10 +201,13 @@ right, then top to bottom of the computation tree.
   \vspace{12 pt}
   \mint{julia}|render(prefix8!(AccessArray(8),+))|
   \includegraphics{tree}
-  \caption{Above: operation order for the left-associative algorithm \code{prefix\allowbreak\_serial!}.
-           Below: operation order for the tree algorithm \code{prefix8!}.
-           The code listing for the \code{render} function is given in Section~\ref{sec:render}.  This figure was rendered in Compose, a Julia package for declarative vector graphics~\cite{Compose.jl}.}
-  \label{fig:gates}
+  \caption{Above: operation order for the left-associative algorithm
+	  \code{prefix\allowbreak\_serial!}.
+	  Below: operation order for the tree algorithm \code{prefix8!}.
+	  The code listing for the \code{render} function is given in
+	  Section~\ref{sec:render}. This figure was rendered in Compose, a
+	  Julia package for declarative vector graphics~\cite{Compose.jl}.}
+   \label{fig:gates}
 \end{figure}
 
 To conclude our exposition of the scan problem, we present the \code{prefix!}
@@ -356,11 +359,10 @@ delays.
   \centering
   \includegraphics{scaling}
   \caption{Weak scaling of the prefix sum kernels. Speedup ratios are the
-  timings for \code{prefix!} over \code{prefix\allowbreak\_serial!}. Plotted as a solid
-  line is the theoretical speedup ratio $r(p)$ of
-  Equation~\ref{eq:scaling-theory}.  This figure was rendered in Gadfly, a
-  Julia package for native plotting and
-  visualization~\cite{Gadfly.jl}.}
+  timings for \code{prefix!} over \code{prefix\allowbreak\_serial!}. Plotted as
+  a solid line is the theoretical speedup ratio $r(p)$ of
+  Equation~\ref{eq:scaling-theory}. This figure was rendered in Gadfly, a
+  Julia package for native plotting and visualization~\cite{Gadfly.jl}.}
   \label{fig:scaling}
 \end{figure}
 
