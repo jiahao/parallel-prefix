@@ -425,20 +425,27 @@ end
 In Section~\ref{sec:prefix} we introduced several different kernels to compute
 scans. Each of these kernels have exactly the same function signature \code{(y,
 +)} representing the data \code{y} and associative binary operator \code{+}.
-These two ingredients for the scan algorithm turn out to have exactly the
-algebraic structure of a monoid.
+But how do we know that these kernels compute the prefix sum correctly?
 
-Recent theoretical work has taken advantage of the monoidal structure. First,
-the monoidal structure has been used to construct a formal algebra of scan
-algorithms to understand the computational equivalence between many different
-execution trees.~\cite{Hinze2004} More recent work has taken advantage of the
-monoidal structure to show that correctness can be established simply by
-showing that a given prefix sum kernel is correct for one particular monoid,
-called the interval monoid, which formalizes the notion of indexing the
-subarrays being accessed over the course of the prefix sum
-computation.~\cite{Chong2014}
+It turns out that the inputs \code{(y, +)} to the scan algorithm turn out to
+have exactly the algebraic structure of a monoid, if the domain of array
+elements \code{y[i]} contains an identity under the operation \code{+}. The
+monoidal structure has been used in at least two ways to prove correctness.
+First, \cite{Hinze2004} constructed a formal algebra that allows correctness of
+circuits to be proved by derivation: all circuits which are equivalent to a
+known correct circuit, up to certain algebraic transformations, will all be
+correct. However, the algebraic proof of correctness is not constructive and
+does not lend itself easily to programmatic verification. Second and more
+recently, \cite{Chong2014} proved that the correctness of a kernel can be
+demonstrated by proving correctness for the interval monoid
+(Definition~\ref{intervalmonoid}), which formalizes the notion of indexing the
+subarrays being accessed over the course of the prefix sum computation. The
+latter method of proof is easy to verify programmatically.
 
-For convenience, we quote the relevant definition:
+In this section, we show how polymorphism allows the same Julia code written in
+previous sections for practical computations to also be used in the formal
+setting of verifying correctness. For convenience, we quote the definition of
+the interval monoid:
 
 \begin{definition}{((4.3) of \cite{Chong2014})}
 \label{def:intervalmonoid}
@@ -470,7 +477,7 @@ operations which are array slices; they are produced by Julia code like
 unit stride representing the set $\{i, i+1, \dots, j\}$. The definition of
 $\oplus_I$ in \eqref{eq:intervalplus} formalizes the notion of combining the
 results from the subarrays \code{y[i:j]} and \code{y[j+1:k]} to get the result
-for the subarray \code{y[i:k]}.  The identity element $\mathrm 1$ formalizes
+for the subarray \code{y[i:k]}.  The identity element $\mathbf 1_I$ formalizes
 an empty interval, while the annihilator $\top$ encodes noncontiguous ranges,
 which correspond to partial sums which cannot be represented by slicing with a
 \code{UnitRange} of the form \code{i:j}.
@@ -492,7 +499,7 @@ results:
 	only in that Julia arrays are 1-based, in contrast to C/OpenCL arrays,
 	which are 0-based.} Furthermore, the correct answer is
 	$\left((1, 1), (1, 2), \dots, (1, n) \right)$, as the $k$th partial sum
-	involves summing the subarray $y[1:k]$.
+	involves summing the subarray \code{y[1:k]}.
 	
 \item	A function that computes the prefix sum in parallel is correct if it is
 	free of data races and its equivalent serialization has the correctness
@@ -509,7 +516,7 @@ needs to be verified explicitly.
 Julia allows us to encode the interval monoid directly from the definition. A
 convenient feature of Julia is the ability to use abstract data types as
 singleton values: Julia types are values, and types can be used as singleton
-values using the \code{Type{T}} construct. Thus, the domain $\mathbb S_I$ can
+values using the \code{Type\{T\}} construct. Thus, the domain $\mathbb S_I$ can
 be written as a Julia type \code{S}, which is the \code{Union} (type union) of:
 
 \begin{itemize}
@@ -523,10 +530,10 @@ Julia types, Definition~\ref{def:intervalmonoid} translates directly into the
 following code:
 
 \begin{minted}[mathescape,texcl]{julia}
-#S is the interval monoid of Definition \ref{def:intervalmonoid}
-abstract Tee # $\top$
-abstract Id  #$\mathbf 1_I$
-typealias S Union(UnitRange, Type{Tee}, Type{Id}) #$\mathbb S_I$
+#S is the interval monoid $\mathbb{S}_I$ of Definition \ref{def:intervalmonoid}
+abstract Tee #$\top$
+abstract Id  #$\mathbf{1}_I$
+typealias S Union(UnitRange, Type{Tee}, Type{Id})
 
 #$\oplus_I$
 +(I::UnitRange, J::UnitRange) = #$+_1$ 
@@ -540,7 +547,7 @@ typealias S Union(UnitRange, Type{Tee}, Type{Id}) #$\mathbb S_I$
 The Julia method dispatcher chooses the most specific method that matches the
 type signature of a given set of arguments~\cite{Bezanson2012}. Thus even
 though \code{+} may appear to be ambiguously defined for inputs with the type
-signature \code{(::UnitRange, ::UnitRange)}, which matches both $+_1$ and $+_5$
+signature \code{(::Unit\-Range, ::UnitRange)}, which matches both $+_1$ and $+_5$
 methods, Julia resolves the ambiguity in favor of $+_1$ which has the more
 specific type signature, since by definition \code{UnitRange} is a subtype of
 \code{S}. However, the method $+_2$ is necessary to resolve the ambiguity
@@ -558,11 +565,11 @@ reduces to writing the assertion:
 
 \begin{minted}{julia}
 #Test that kernel is correct for problem size n
-@assert kernel([k:k for k=1:n], +) == [1:k for k=1:n]
+@assert kernel([k:k for k=1:n],+)==[1:k for k=1:n]
 \end{minted}
 
-Attempting to verify an incorrect kernel results in at least one \code{Tee}
-being produced during the computation, thus poisoning the program state and
+Attempting to verify an incorrect kernel results in at least one $\top$ being
+produced during the computation, thus poisoning the program state and
 precipitating type conversion errors of the form
 
 \begin{minted}{jlcon}
@@ -570,7 +577,7 @@ precipitating type conversion errors of the form
 convert(::Type{UnitRange}, ::Type{Tee})
 \end{minted}
 %
-which arise from the inability of noncontinuous ranges to be expressed as
+which arise from the inability of noncontiguous ranges to be expressed as
 \code{UnitRange}s.
 
 Julia thus allows for the same kernels used for computation to be verified
