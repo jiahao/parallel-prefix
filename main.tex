@@ -370,7 +370,7 @@ code for Julia's garbage collector may be found at
 \url{https://github.com/JuliaLang/julia/blob/275afc8b74b9c6ea5d34aefb8085525ff5dfc239/src/gc.c}}~\cite{McCarthy1960}.
 Therefore, it becomes important to factor out the possible effects of
 stop-the-world garbage collection. We explicitly disabled garbage collection
-with \code{gc\_disable()} before running each kernel, then reenabled garbage
+with \code{gc\_disable()} before running each kernel, then re-enabled garbage
 collection with \code{gc\_enable()} after running each kernel. As an additional
 precaution, we timed the kernels multiple times and took the minimum time for
 each kernel so as to reduce fluctuations due to general nondeterministic
@@ -390,9 +390,9 @@ delays.
 The empirical timings shown in Figure~\ref{fig:scaling} show excellent
 agreement with the theoretical prediction of Equation~\ref{eq:scaling-theory},
 with slight deterioration for $p>40$ cores reflecting the increased
-communication overhead.
-
-\TODO{Explain why we have steps}
+communication overhead. The steps in the graph are as predicted by theory,
+arising from the depth of the computation tree growing by one to accommodate
+the extra data.
 
 \section{Polymorphism for visualization}
 
@@ -450,10 +450,9 @@ end
 \section{Proving correctness}
 
 In Section~\ref{sec:prefix} we introduced several different kernels to compute
-scans. Each of these kernels have exactly the same function signature \code{(y,
+scans. But how do we know that these kernels compute the prefix sum correctly?
+Each of these kernels have exactly the same function signature \code{(y,
 +)} representing the data \code{y} and associative binary operator \code{+}.
-But how do we know that these kernels compute the prefix sum correctly?
-
 It turns out that the inputs \code{(y, +)} to the scan algorithm turn out to
 have exactly the algebraic structure of a monoid, if the domain of array
 elements \code{y[i]} contains an identity under the operation \code{+}. The
