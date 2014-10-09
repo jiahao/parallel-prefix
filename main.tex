@@ -590,6 +590,15 @@ Definition~\ref{def:intervalmonoid}. Julia's method dispatch rules allow
 \code{+} to be defined in a way that reveals the catch-all nature of $\top$:
 method $+_5$, which returns \code{Tee}, is dispatched only when none of the
 other methods matches the type signature of the given arguments.
+Figure~\ref{fig:dispatch} summarizes the method dispatch table.
+
+\begin{figure}
+  \centering
+
+  \includegraphics[width=.9\columnwidth]{intervaldispatch}
+  \caption{Dispatch table for the monoid operator $\oplus_I$.}
+   \label{fig:dispatch}
+\end{figure}
 
 Verifying some function \code{kernel} for the problem size \code{n} simply
 reduces to writing the assertion:
