@@ -497,6 +497,9 @@ function setindex!(A::AccessArray, x, i)
     push!(A.history, (A.read, {i}))
     A.read = {}
 end
+
+#Dummy operator
++(a::Void, b::Void) = nothing
 \end{minted}
 
 \TODO{Elaborate}
