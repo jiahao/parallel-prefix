@@ -149,7 +149,7 @@ left-associative algorithm \code{prefix\allowbreak\_serial!}:
 
 \begin{minted}{julia}
 function prefix_serial!(y, +)
-    @inbounds for i=2:length(y)
+    for i=2:length(y)
         y[i] = y[i-1] + y[i]
     end
     y
@@ -238,17 +238,16 @@ somewhat less clear than when explicitly written out in \code{prefix8!}, the
 \code{prefix!} function nonetheless preserves the double tree structure.
 
 \begin{minted}{julia}
-function prefix!(y, .+)
+function prefix!(y, +)
     l=length(y)
     k=iceil(log2(l))
     #The "reduce" tree
-    @inbounds for j=1:k, i=2^j:2^j:min(l, 2^k)
-        y[i] = y[i-2^(j-1)] .+ y[i]
+    for j=1:k, i=2^j:2^j:min(l, 2^k)
+        y[i] = y[i-2^(j-1)] + y[i]
     end
     #The "broadcast" tree
-    @inbounds for j=(k-1):-1:1, i=3*2^(j-1):2^j:
-            min(l, 2^k)
-        y[i] = y[i-2^(j-1)] .+ y[i]
+    for j=(k-1):-1:1, i=3*2^(j-1):2^j:min(l, 2^k)
+        y[i] = y[i-2^(j-1)] + y[i]
     end
     y
 end
