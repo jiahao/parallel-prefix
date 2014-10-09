@@ -43,7 +43,7 @@ Jiahao Chen\\
 \alignauthor
 Alan Edelman\\
        \affaddr{Massachusetts Institute of Technology}\\
-       \affaddr{Department of Mathematics and Computer Science and Artificial Intelligence Laboratory}\\
+       \affaddr{Department of Mathematics, and Computer Science and Artificial Intelligence Laboratory}\\
        \affaddr{77 Massachusetts Avenue}\\
        \affaddr{Cambridge, Massachusetts 02139, USA}\\
        \email{edelman@mit.edu}
@@ -108,7 +108,7 @@ Polymorphism. Julia provides two distinct kinds of polymorphism. One is the para
 \section{The prefix reduction algorithm}
 \label{sec:prefix}
 
-What is prefix reduction~\cite{Iverson1962,Ladner1980,Brent1982}? Making use of associativity (or approximate associativity side node about floating point and how it doesn't really matter for most applications)  to regroup operations to provide different execution strategies.
+What is prefix reduction~\cite{Iverson1979,Ladner1980,Brent1982}? Making use of associativity (or approximate associativity side node about floating point and how it doesn't really matter for most applications)  to regroup operations to provide different execution strategies.
 
 Parallel scan is one of the ur-algorithms for parallel computing~\cite{Kruskal1985,Blelloch1989,Bell2012}.
 There are many applications for the basic prefix sum algorithm~\cite{Blelloch1990,Blelloch1993}, but to just name a few relevant for technical computing, we can do 
@@ -214,6 +214,7 @@ actually computed anything in parallel, merely organized the computation in a
 way that would \textit{allow} for concurrent execution. Running the code as is
 on an \code{Array} object would run the operations sequentially, from left to
 right, then top to bottom of the computation tree. 
+
 \begin{figure}
   \centering
 
@@ -363,7 +364,7 @@ specifically left out the time needed to broadcast the data to the remote
 processes, so as to focus only on the execution times of the kernels of
 interest. We also took care to disable the garbage collector. Julia, like many
 high-level dynamic languages, provides a garbage collector to aid in memory
-management. Julia 0.3.1 uses a simple stop-the-world, non-moving, precise mark
+management. Julia v0.3.1 uses a simple stop-the-world, non-moving, precise mark
 and sweep garbage collector, where deallocation and finalization of garbage
 objects may not happen immediately after objects become unused\footnote{The
 code for Julia's garbage collector may be found at
@@ -634,7 +635,7 @@ specific type signature, since by definition \code{UnitRange} is a subtype of
 \code{S}. However, the method $+_2$ is necessary to resolve the ambiguity
 between $+_3$ and $+_4$: Julia uses symmetric multiple dispatch, so that the
 positions of the arguments are not used to resolve
-ambiguities.~\cite{Bezanson2012}. As a result, inputs with type signature
+ambiguities~\cite{Bezanson2012}. As a result, inputs with type signature
 \code{(::Type\{Id\}, ::Type\{Id\})}, which lie in the intersection of the type
 signatures of $+_3$ and $+_4$, have to be special-cased. Bearing these rules in
 mind, it is straightforward to verify that the definition of \code{+} in the
