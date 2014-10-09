@@ -55,6 +55,30 @@ Alan Edelman\\
 \begin{abstract}
 \TODO{Polymorphism is a resource for code reuse. The same code can be used for computation, but also for other tasks like visualization and formal verification. The ability to reuse code for all these purposes provides new ways to understand what parallel code is doing and sidesteps two-language problems in manual retranslation of programs.}
 
+\TODO{Polymorphism taken to the next level. Not just expression templates for Floats and Ints.}
+
+\TODO{Alan's anecdote about how Connection Machine didn't support enough polymorphism to do matrix multiply reduction, only scalar. Everyone agreed it was useful but it just couldn't be done at the time, even though this was a LISP-based parallel computer with the best available team. Maybe had to do with the hard coded data structures? The enemy of generic programming is hard coding?}
+
+\TODO{Does MPI support matrix multiply scan? It's been around for awhile and it might still not be possible to do matrices without heroics in MPI.}
+
+\TODO{Polymorphism at a level beyond which we don't think we've seen before in the parallel computing world.}
+
+\TODO{Chunked parallel prefix}
+
+\begin{verbatim}
+ ...a...   ...b...   ...c... ...d...
+
+Step 1. Embarrassing serial parallel prefix - implementing the tree locally is a big mistake.
+
+cumsum(a) cumsum(b) cumsum(c) cumsum(d)
+
+Step 2. Define the prefix
+
+a \oplus b = a[end] .+ b
+
+Defining this particular operator lets you do prefix in the "right way"
+\end{verbatim}
+
 High level languages provide nice abstractions for most computing tasks, but fall short of providing useful abstractions for parallel computing.
 
 The lack of useful abstractions poses significant challenges for users of parallel computing.
@@ -83,7 +107,7 @@ Code reuse for other tasks as well like visualization.
 
 It's hard to write parallel code that is correct. Parallel programs are prone to subtle, nondeterministic bugs like race conditions. It's also hard to understand parallel code once it is written. It's hard to understand what it is doing.
 
-Nobody really understands how to do parallel computing. In practice, a lot of parallel computing code is mucky and grosas because you have to embed all sorts of low level MPI initialization and communication primitives in your code.
+In practice, a lot of parallel computing code is mucky and gross because you have to embed all sorts of low level MPI initialization and communication primitives in your code.
 
 How do the GPU Gems chapter showcase parallel prefix?
 
@@ -97,7 +121,7 @@ Julia is a very high level dynamic language designed specifically for technical 
 
 \TODO{Explain that the speed comes from MD type annotations which serve the dual purpose of providing type annotations for multiple dispatch and also providing type information which the compiler can use to perform automatic type inference which allows for speed.}
 
-\TODO{Traditionally we emphasized the interplay of multiple dispatch and automatic type inference for productivity and performance. Here we show that the polymorphism imbued by the combination allows for powerful constructs that go beyond just ordinary comptuation into visualization and program verification territory also.}
+\TODO{Traditionally we emphasized the interplay of multiple dispatch and automatic type inference for productivity and performance. Here we show that the polymorphism imbued by the combination allows for powerful constructs that go beyond just ordinary computation into visualization and program verification territory also.}
 
 Type system and multiple dispatch. The type system is a resource for programmers, not just a low level compiler system that is hidden from the user. Being able to use types in user written code has turned out to be a great boon for writing technical code.
 
@@ -175,7 +199,7 @@ the elements of \code{y}.
 As written, the \code{prefix\allowbreak\_serial!} function assumes, but does not check,
 that the function passed to it is associative. If necessary, checks of the form
 
-\mint{julia}|@assert (y[1]+y[2])+y[3]==y[1]+(y[2]+y[3])|
+\mint{julia}|@assert (y[1]+y[2])+y[3] == y[1]+(y[2]+y[3])|
 %
 can be included, but for simplicity of presentation, we omit such checks from
 the code presented in this paper. We also neglect concerns relating to
@@ -385,6 +409,7 @@ delays.
   Equation~\ref{eq:scaling-theory}. This figure was rendered in Gadfly, a
   Julia package for native plotting and visualization~\cite{Gadfly.jl}.}
   \label{fig:scaling}
+  \TODO{Label powers of 2 and 3*powers of 2.}
 \end{figure}
 
 The empirical timings shown in Figure~\ref{fig:scaling} show excellent
