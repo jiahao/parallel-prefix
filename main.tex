@@ -512,7 +512,7 @@ type AccessArray
     length :: Int
     read :: Vector
     history :: Vector
-    AccessArray(length)=new(length, {}, {})
+    AccessArray(length)=new(length, Any[], Any[])
 end
 
 length(A::AccessArray)=A.length
@@ -523,13 +523,15 @@ function getindex(A::AccessArray, i)
 end
 
 function setindex!(A::AccessArray, x, i)
-    push!(A.history, (A.read, {i}))
-    A.read = {}
+    push!(A.history, (A.read, Any[i]))
+    A.read = Any[]
 end
 
 #Dummy associative operator
 +(a::Void, b::Void) = nothing
 \end{minted}
+
+\TODO{Explain Any type annotation}
 
 As implemented, the \code{AccessArray} type can only accurately trace code
 where a \code{setindex!} call uses all the data from previous \code{getindex}
