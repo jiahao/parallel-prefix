@@ -500,10 +500,7 @@ rather than actually storing data elements, merely records the indices accessed
 by indexing operations.
 
 Here is the entire Julia code that implements \code{AccessArray}, an abstract
-array type which instruments its indexing operations and returns the
-\code{nothing} value\footnote{\code{nothing} is a value of the special
-singleton type \code{Void}, akin to Python's \code{none} or Haskell's
-\code{Nothing}.} for each \code{getindex} call.
+array type which instruments its indexing operations:
 
 \begin{minted}{julia}
 import Base: getindex, setindex!, length
@@ -530,8 +527,24 @@ end
 #Dummy associative operator
 +(a::Void, b::Void) = nothing
 \end{minted}
+%
+The \code{AccessArray} type contains three fields:
 
-\TODO{Explain Any type annotation}
+\begin{description}
+	\item[\code{length}] the effective length of the array,
+	\item[\code{read}] the history of indices accessed by \code{getindex}
+		that have yet to be followed by a \code{setindex!} call, and
+	\item[\code{history}] the history of indices accessed by
+		(\code{getindex}, \code{setindex!}) calls.
+\end{description}
+%
+The \code{Any[]} construct defines an empty array which is explicitly typed to
+allow elements of any type. \code{getindex} is defined to always return the value
+\code{nothing}\footnote{\code{nothing} is a value of the special
+singleton type \code{Void}, akin to Python's \code{none} or Haskell's
+\code{Nothing}.}, while recording the index \code{i} into \code{A.read}.
+\code{setindex!} records the index \code{i}, pairs it with the current value of
+\code{A.read}, and stores the pair into \code{A.history}.
 
 As implemented, the \code{AccessArray} type can only accurately trace code
 where a \code{setindex!} call uses all the data from previous \code{getindex}
