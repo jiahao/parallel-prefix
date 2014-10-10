@@ -331,7 +331,7 @@ argue in Section~\ref{sec:parallel-prefix} that the exact same code in
 \code{prefix!} can be reused for parallel execution which can achieve speedup
 over \code{prefix\allowbreak\_serial!}.
 
-\section{Distributed computing using prefix reduction}
+\section{Operators for distributed computations}
 
 In this section we show how the prefix algorithm we wrote above can be run in a
 distributed setting without modification. The key is to make use of overloading
@@ -467,7 +467,7 @@ communication overhead. The steps in the graph are as predicted by theory,
 arising from the depth of the computation tree growing by one to accommodate
 the extra data.
 
-\section{Polymorphism for dynamic code visualization}
+\section{Operator-level instrumentation}
 
 Earlier, we showed in Figure~\ref{fig:gates} visualizations demonstrating the
 double tree structure of the Brent--Kung parallel prefix algorithm and also the
@@ -604,7 +604,7 @@ used to construct vector graphical objects from the instrumentation data stored
 in an \code{AccessArray}, and Figure~\ref{fig:gates} shows graphical renderings
 of the access patterns produced by \code{prefix\_serial!} and \code{prefix!}.
 
-\section{Proving correctness}
+\section{Operators for formal verification}
 
 In Section~\ref{sec:prefix} we introduced several different kernels to compute
 scans. But how do we know that these kernels compute the prefix sum correctly?
