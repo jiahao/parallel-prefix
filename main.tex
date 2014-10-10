@@ -115,21 +115,47 @@ Can we do better to abstract away the low level communication protocols of a dis
 
 In Julia we expose how overloading at the operator level parallelism can be used to showcase the essentials of what is going on while relegating the parallelism to a lower more primitive level. In other words, successful abstraction!
 
-\section{The Julia language}
+\section{Multimethods in Julia}
 
-Julia is a very high level dynamic language designed specifically for technical computing~\cite{Bezanson2012}.
+In this paper, we use the Julia language\footnote{Julia is MIT-licensed open
+source software and can be downloaded freely from \url{julialang.org}. We use
+v0.3.1 in this paper.}, a very high level dynamic language designed
+specifically for technical computing~\cite{Bezanson2012}. Julia offers language
+constructs that support different mechanisms of polymorphism, which programming
+language theorists call universal polymorphism and \textit{ad hoc}
+polymorphism, or overloading~\cite{Strachey2000}. In this paper, we focus only
+on Julia's overloading mechanism provided by multimethods.
 
-\TODO{Explain that the speed comes from MD type annotations which serve the dual purpose of providing type annotations for multiple dispatch and also providing type information which the compiler can use to perform automatic type inference which allows for speed.}
+\textit{Ad hoc} polymorphism, or overloading, is a language construct that
+naturally expresses the polymorphism inherent in the mathematical structure of
+technical computing~\cite{Bezanson2014}. Consider the \code{*} operator which
+represents multiplication: the product can be taken between two integers, two
+floating-point numbers, a scalar and a vector, or a matrix and a matrix, just
+to list a few typical possibilities. All these different semantics can be
+represented by with the same syntax, namely an expression of the form
+\code{a*b}. All programming languages resolve the ambiguity by considering the
+types of the arguments \code{a} and \code{b}, which is formally equivalent to
+specifying the domains of the operands~\cite{Scott1976}.
 
-\TODO{Traditionally we emphasized the interplay of multiple dispatch and automatic type inference for productivity and performance. Here we show that the polymorphism imbued by the combination allows for powerful constructs that go beyond just ordinary computation into visualization and program verification territory also.}
+In practice, programming languages vary greatly in how they allow users to
+reason about types. Some languages, like Julia, offer the ability to define
+multimethods, where a single generic function like \code{*} can be defined with
+at more than one method, each with a different type signature: in Julia
+notation, \code{*(a::Number, b::Number)} defines a method for scalar
+multiplication, whereas \code{*(a::Matrix, b::Vector)} defines a method for
+matrix-vector products, and so on. Closely related is the support for multiple
+dispatch, where the method chosen to match an expression like \code{a*b} can
+depend on the type of more than one argument. In this respect, multimethods
+differs greatly from more conventional languages that provide class-based
+objects; dispatch only occurs on the first argument, which is the type of the
+class.
 
-Type system and multiple dispatch. The type system is a resource for programmers, not just a low level compiler system that is hidden from the user. Being able to use types in user written code has turned out to be a great boon for writing technical code.
+In this paper, we demonstrate how multimethod polymorphism is far more general
+than just dispatching on computational kernels. We study one specific
+algorithm, namely scan, and show how the same exact code written in Julia for
+serial computation can be composed with appropriately overloaded operators to
+generate parallel code, visualizations, and also proofs of correctness.
 
-Polymorphism. Julia provides two distinct kinds of polymorphism. One is the paradigm of multimethods and the other is parametric polymorphism. We will focus more on how multimethods are helpful.
-
-\TODO{State that we use Julia v0.3.1.}
-
-\section{The prefix reduction algorithm}
 \label{sec:prefix}
 
 What is prefix reduction~\cite{Iverson1979,Ladner1980,Brent1982}? Making use of associativity (or approximate associativity side node about floating point and how it doesn't really matter for most applications)  to regroup operations to provide different execution strategies.
