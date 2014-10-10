@@ -52,16 +52,22 @@ Alan Edelman\\
 \date{15 October 2014}
 
 \maketitle
+
 \begin{abstract}
-\TODO{Polymorphism is a resource for code reuse. The same code can be used for computation, but also for other tasks like visualization and formal verification. The ability to reuse code for all these purposes provides new ways to understand what parallel code is doing and sidesteps two-language problems in manual retranslation of programs.}
+Polymorphism in programming languages enables code reuse. Here, we show that
+polymorphism has broad applicability far beyond computations for technical
+computing: not only can the exact same code can be reused for serial and
+distributed computing, but code can also be instrumented for visualizing its
+data flow, and also be used for formal verification of correctness.  The
+ability to reuse a single codebase for all these purposes provides new
+ways to understand and verify parallel programs.
+\end{abstract}
 
 \TODO{Polymorphism taken to the next level. Not just expression templates for Floats and Ints.}
 
 \TODO{Alan's anecdote about how Connection Machine didn't support enough polymorphism to do matrix multiply reduction, only scalar. Everyone agreed it was useful but it just couldn't be done at the time, even though this was a LISP-based parallel computer with the best available team. Maybe had to do with the hard coded data structures? The enemy of generic programming is hard coding?}
 
 \TODO{Does MPI support matrix multiply scan? It's been around for awhile and it might still not be possible to do matrices without heroics in MPI.}
-
-\TODO{Polymorphism at a level beyond which we don't think we've seen before in the parallel computing world.}
 
 \TODO{Chunked parallel prefix}
 
