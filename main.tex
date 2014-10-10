@@ -548,13 +548,14 @@ singleton type \code{Void}, akin to Python's \code{none} or Haskell's
 
 As implemented, the \code{AccessArray} type can only accurately trace code
 where a \code{setindex!} call uses all the data from previous \code{getindex}
-calls. Despite its simplicity, however, the \code{AccessArray} type is
-nevertheless sufficient to record transactions relevant for prefix sums, and
-can be extended to more general code patterns if necessary. The Appendix
-further defines the \code{render} function used to construct vector graphical
-objects from the instrumentation data stored in an \code{AccessArray}, and
-Figure~\ref{fig:gates} shows graphical renderings of the access patterns
-produced by \code{prefix\_serial!} and \code{prefix!}.
+calls. Furthermore, it does not handle cases where execution flow depends on
+the values of the array elements. Nevertheless, the \code{AccessArray} type is
+sufficiently powerful to record transactions relevant for prefix sums, and can
+be extended to more general execution flow patterns if necessary by wrapping
+actual data elements. The Appendix further defines the \code{render} function
+used to construct vector graphical objects from the instrumentation data stored
+in an \code{AccessArray}, and Figure~\ref{fig:gates} shows graphical renderings
+of the access patterns produced by \code{prefix\_serial!} and \code{prefix!}.
 
 \section{Proving correctness}
 
@@ -791,9 +792,28 @@ Also funding.
 \section{The \code{render} function}
 \label{sec:render}
 
-Here are the \code{gate} type and \code{render} function used to generate the figures in Figure~\ref{fig:gates}.
+This appendix shows the \code{render} function used to generate the figures in
+Figure~\ref{fig:gates}. We use here the Compose package for declarative vector
+graphics in Julia~\cite{Compose.jl}.
 
-\TODO{Explain assumptions in the rendering}
+\code{render} is defined with two methods. The first describes how to render
+each elementary operation is represented as a logic \code{gate} with inputs
+\code{ins} and outputs \code{outs}. The \code{render(\allowbreak{}G::gate, ...)} method
+draws the inputs as small circles at coordinates \code{ipoints} and links them
+to the outputs, which are drawn as large circles at coordinates \code{opoints}.
+The second method for \code{render} describes how to render the instrumentation
+data in an \code{AccessArray}: a first pass through the data computes the depth
+of the tree to draw, and the second pass actually places gates appropriately
+for each operation, and finally vertical guidelines for every processor are
+added.
+
+The code as written uses a heuristic taking advantage of the sequential
+left-to-right access order of the serialized prefix sum kernels: if an
+operation accesses an index lower than the most recently accessed index, then
+the current operation defines a new layer of the computation tree. This
+simplifying assumption does not fundamentally change the main idea of rendering
+instrumentation data being acquired at the level of individual variables, and
+more sophisticated reasoning about tree depths can be used as necessary.
 
 \begin{minted}{julia}
 using Compose
@@ -827,8 +847,9 @@ function render(A::AccessArray)
     end
     maxdepth = depth
     
+    #Map each operation onto a gate
     olast = depth = 0
-    C = {}
+    C = Any[]
     for y in A.history
         (any(y[1] .<= olast)) && (depth += 1)
         push!(C, render(gate(y...), A.length,
@@ -836,6 +857,8 @@ function render(A::AccessArray)
         olast = maximum(y[2])
     end
     
+    #Compose everything together with processor
+    #guidelines
     push!(C, compose(context(
       units=UnitBox(0.5, 0, A.length, 1)),
       [line([(i,0), (i,1)]) for i=1:A.length]...,
