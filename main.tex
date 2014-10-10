@@ -705,8 +705,11 @@ Figure~\ref{fig:dispatch} summarizes the method dispatch table.
   \centering
 
   \includegraphics[width=.9\columnwidth]{intervaldispatch}
-  \caption{Dispatch table for the monoid operator $\oplus_I$.}
-   \label{fig:dispatch}
+  \caption{Operation table for the interval monoid $(\mathbb S_I, \oplus_I)$,
+	  showing the overlapping domains of the various methods
+	  $+_{i\in\{1,\dots,5\}}$. The dispatch rules in Julia choose the most
+  	  specific method defined over the given cell~\cite{Bezanson2012}.}
+  \label{fig:dispatch}
 \end{figure}
 
 Verifying some function \code{kernel} for the problem size \code{n} simply
