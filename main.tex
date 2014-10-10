@@ -492,13 +492,18 @@ z = x + y
 setindex!(A, z, i)
 \end{minted}
 
-\TODO{Rewrite the next two paragraphs}
+All the operations in the prefix sum kernels presented have array access
+operations of this form: two \code{getindex} calls followed by one
+\code{setindex!}. Based on this observation, we can write a very simple data
+type that nominally provides exactly the same interface as an \code{Array}, but
+rather than actually storing data elements, merely records the indices accessed
+by indexing operations.
 
-The nice thing is you can write a custom type that implements \code{getindex} and \code{setindex!}. You don't have to go crazy and implement ALL the indexing semantics of Julia arrays, just the methods that are relevant to your specific application. In this problem all that is really needed is the indexing semantics of a single element.
-
-Now all we have to do is to introduce a custom type that doesn't really do anything but instead records every \code{getindex} and \code{setindex!} operation performed on it. To satisfy the minimum requirements of the prefix reduction algorithm all we need at the moment is for \code{getindex} to return \code{nothing} and to define a dummy method for the associative operator \code{+} that operates on \code{nothing}. \code{nothing} is a value of the special singleton type \code{Void}, akin to Python's \code{none} or Haskell's \code{Nothing}.
-
-Here is a code listing of implementing the trace type
+Here is the entire Julia code that implements \code{AccessArray}, an abstract
+array type which instruments its indexing operations and returns the
+\code{nothing} value\footnote{\code{nothing} is a value of the special
+singleton type \code{Void}, akin to Python's \code{none} or Haskell's
+\code{Nothing}.} for each \code{getindex} call.
 
 \begin{minted}{julia}
 import Base: getindex, setindex!, length
@@ -522,11 +527,19 @@ function setindex!(A::AccessArray, x, i)
     A.read = {}
 end
 
-#Dummy operator
+#Dummy associative operator
 +(a::Void, b::Void) = nothing
 \end{minted}
 
-\TODO{Elaborate}
+As implemented, the \code{AccessArray} type can only accurately trace code
+where a \code{setindex!} call uses all the data from previous \code{getindex}
+calls. Despite its simplicity, however, the \code{AccessArray} type is
+nevertheless sufficient to record transactions relevant for prefix sums, and
+can be extended to more general code patterns if necessary. The Appendix
+further defines the \code{render} function used to construct vector graphical
+objects from the instrumentation data stored in an \code{AccessArray}, and
+Figure~\ref{fig:gates} shows graphical renderings of the access patterns
+produced by \code{prefix\_serial!} and \code{prefix!}.
 
 \section{Proving correctness}
 
