@@ -819,7 +819,7 @@ primitive for exclusive scan.~\cite{MPI2} GPU-specific implementations also
 exist, such in Haskell's Accelerate library~\cite{Chakravarty2011} and the
 Thrust C++ library~\cite{Bell2012}. Most of these implementations, however,
 either lack genericity or express genericity through cumbersome language
-features. APL and ZPL do not provide generic parallel prefix. MPI allows
+semantics. APL and ZPL do not provide generic parallel prefix. MPI allows
 parallel prefix on any \code{MPI\_Datatype} and \code{MPI\_op}; user-defined
 operations and data types can be used, but must be explicitly wrapped to do so.
 The Haskell Accelerate library provides genericity by generating code from
