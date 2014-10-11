@@ -7,9 +7,6 @@
 \newcommand{\code}[1]{\texttt{#1}}
 \newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
 
-\usepackage{todonotes}
-\newcommand{\TODO}[1]{\todo[inline]{#1}}
-
 %Definition listing
 \usepackage{amsmath}
 \newtheorem{definition}{Definition}
@@ -71,8 +68,6 @@ ways to understand and verify parallel programs.
 
 \keywords{Julia, prefix sum, scan, parallel prefix, polymorphism,
 instrumentation, visualization}
-
-\listoftodos
 
 \section{Introduction}
 
@@ -445,7 +440,6 @@ delays.
   Equation~\ref{eq:scaling-theory}. This figure was rendered in Gadfly, a
   Julia package for native plotting and visualization~\cite{Gadfly.jl}.}
   \label{fig:scaling}
-  \TODO{Label powers of 2 and 3*powers of 2.}
 \end{figure}
 
 The empirical timings shown in Figure~\ref{fig:scaling} show excellent
