@@ -686,8 +686,13 @@ we have written in earlier sections. By construction, the \code{fetch}es on
 parallel code is free of data races. Thus only the serial correctness result
 needs to be verified explicitly.
 
-Julia allows us to encode the interval monoid directly from the definition. A
-convenient feature of Julia is the ability to use abstract data types as
+Julia allows us to encode the interval monoid directly from the definition, by
+making use of the rich type system which is exposed to the user. The type
+system is conventionally used in Julia for type inference and data abstraction;
+here, we exploit the Curry--Howard correspondence to use the type system as a
+computational resource that can be used to prove
+correctness~\cite{Curry1958,Tait1965,Howard1980}. A convenient feature of
+Julia's type system is the ability to use abstract data types as
 singleton values: Julia types are values, and types can be used as singleton
 values using the \code{Type\{T\}} construct. Thus, the domain $\mathbb S_I$ can
 be written as a Julia type \code{S}, which is the \code{Union} (type union) of:
@@ -766,17 +771,15 @@ convert(::Type{UnitRange}, ::Type{Tee})
 \end{minted}
 %
 which arise from the inability of noncontiguous ranges to be expressed as
-\code{UnitRange}s.
+\code{UnitRange}s. 
 
-Julia thus allows for the same kernels used for computation to be verified
-directly without any rewriting or translation, simply by exploiting the
-polymorphism arising from the generic nature of prefix sum kernels, and
+The Curry--Howard correspondence allows us to verify correct programs as
+programs with no type errors; programs with type errors must necessarily be
+incorrect. Julia thus allows for the same kernels used for computation to be
+verified directly without any rewriting or translation, simply by exploiting
+the polymorphism arising from the generic nature of prefix sum kernels, and
 composing such generic functions with appropriate choices of input data types
 and associative operators over those types.
-
-\TODO{Two-language problem for formal verification?}
-
-\TODO{Say something about how we are using the type system to prove correctness via Curry-Howard}
 
 \section{Related work}
 
@@ -799,6 +802,23 @@ Haskell Accelerate for GPU programming~\cite{Chakravarty2011}. Is it generic? Ye
 In Julia we use duck typing.
 
 Our approach is rather naive and does not account for the complexities in real world implementations, for example possible synchronicity issues produced by higher levels of the broadcast and reduce trees that could result in bus saturation. In principle this can be handled at the scheduler level in the system but we currently don't have the capabilities to do so in Julia.
+
+Scan-then-fan parallel prefix: \TODO{Chunked parallel prefix}
+
+\begin{verbatim}
+ ...a...   ...b...   ...c... ...d...
+
+Step 1. Embarrassing serial parallel prefix - implementing the tree locally is a big mistake.
+
+cumsum(a) cumsum(b) cumsum(c) cumsum(d)
+
+Step 2. Define the prefix
+
+a \oplus b = a[end] .+ b
+
+Defining this particular operator lets you do prefix in the "right way"
+\end{verbatim}
+
 
 \section{Conclusions and outlook}
 
