@@ -455,6 +455,23 @@ communication overhead. The steps in the graph are as predicted by theory,
 arising from the depth of the computation tree growing by one to accommodate
 the extra data.
 
+\subsection{Fan-then-scan parallel prefix}
+
+The genericity of \code{prefix!} is also very useful for implementing
+so-called meta-strategies for parallel prefix such as
+scan-then-fan~\cite{Merrill2009,Wilt2013}. The scan-then-fan variant of
+parallel prefix is a divide-and-conquer algorithm, where parts of the scan are
+chunked and computed serially on each process, after which each chunk is
+offset by the correct result by the value of the last element in its preceding
+chunk. The offsets can be propagated simply by running \code{prefix!} on the
+distributed array of chunks, with the operator
+
+\mint{julia}|+(a, b) = a[end] .+ b|
+%
+This variant of parallel prefix avoids the extra work incurred by generating a
+computation tree that is wider than the total number of available processes,
+and thus is more efficient to compute.
+
 \section{Operator-level instrumentation}
 
 Earlier, we showed in Figure~\ref{fig:gates} visualizations demonstrating the
@@ -802,22 +819,6 @@ Haskell Accelerate for GPU programming~\cite{Chakravarty2011}. Is it generic? Ye
 In Julia we use duck typing.
 
 Our approach is rather naive and does not account for the complexities in real world implementations, for example possible synchronicity issues produced by higher levels of the broadcast and reduce trees that could result in bus saturation. In principle this can be handled at the scheduler level in the system but we currently don't have the capabilities to do so in Julia.
-
-Scan-then-fan parallel prefix: \TODO{Chunked parallel prefix}
-
-\begin{verbatim}
- ...a...   ...b...   ...c... ...d...
-
-Step 1. Embarrassing serial parallel prefix - implementing the tree locally is a big mistake.
-
-cumsum(a) cumsum(b) cumsum(c) cumsum(d)
-
-Step 2. Define the prefix
-
-a \oplus b = a[end] .+ b
-
-Defining this particular operator lets you do prefix in the "right way"
-\end{verbatim}
 
 
 \section{Conclusions and outlook}
