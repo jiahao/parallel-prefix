@@ -63,65 +63,53 @@ ability to reuse a single codebase for all these purposes provides new
 ways to understand and verify parallel programs.
 \end{abstract}
 
-\TODO{Polymorphism taken to the next level. Not just expression templates for Floats and Ints.}
-
-\TODO{Alan's anecdote about how Connection Machine didn't support enough polymorphism to do matrix multiply reduction, only scalar. Everyone agreed it was useful but it just couldn't be done at the time, even though this was a LISP-based parallel computer with the best available team. Maybe had to do with the hard coded data structures? The enemy of generic programming is hard coding?}
-
-\TODO{Does MPI support matrix multiply scan? It's been around for awhile and it might still not be possible to do matrices without heroics in MPI.}
-
-\TODO{Chunked parallel prefix}
-
-\begin{verbatim}
- ...a...   ...b...   ...c... ...d...
-
-Step 1. Embarrassing serial parallel prefix - implementing the tree locally is a big mistake.
-
-cumsum(a) cumsum(b) cumsum(c) cumsum(d)
-
-Step 2. Define the prefix
-
-a \oplus b = a[end] .+ b
-
-Defining this particular operator lets you do prefix in the "right way"
-\end{verbatim}
-
-High level languages provide nice abstractions for most computing tasks, but fall short of providing useful abstractions for parallel computing.
-
-The lack of useful abstractions poses significant challenges for users of parallel computing.
-
-In this paper we study a primitive parallel algorithm, namely that of prefix reduction, and show how it can be implemented with operator overloading so that the parallelism occurs at the operational level, not the algorithmic level.
-
-The ability to write such code shows that Julia's abstractions are useful for reasoning about the structure of parallel algorithms by successfully abstracting away implementation details.
-
-Code reuse for other tasks as well like visualization.
-
-\end{abstract}
-
 \category{D.1.3}{Concurrent programming}{Distributed programming}
 \category{D.3.2}{Programming languages}{Very high-level languages}
 \category{G.1.0}{General numerical analysis}{Parallel algorithms}
 
 \terms{Algorithms}
 
-\keywords{Julia, prefix sum, scan}
+\keywords{Julia, prefix sum, scan, parallel prefix, polymorphism,
+instrumentation, visualization}
 
 \listoftodos
 
 \section{Introduction}
 
-\TODO{Cleanup}
+Abstractions are the lifeblood of computer science~\cite{Abelson1996}.
+Separating higher level concepts from lower level implementation details allows
+code to be more composable and reusable. Code using appropriate abstractions is
+simpler to understand and maintain. The desire for high level abstractions
+often seems inimical to writing high-performance code; oftentimes performance
+can only result from code that takes advantage of low-level implementation
+details and hence break abstraction. Thus areas like technical computing and
+parallel programming, where performance is a key consideration, exhibit a
+general dearth of abstraction and suffer the consequent complexities in large,
+inscrutable and nearly unmaintainable codebases. Parallel programs are
+notoriously prone to subtle, nondeterministic bugs arising from race conditions
+and they are difficult to verify for correctness. 
 
-It's hard to write parallel code that is correct. Parallel programs are prone to subtle, nondeterministic bugs like race conditions. It's also hard to understand parallel code once it is written. It's hard to understand what it is doing.
+On some level, technical computing has many natural applications for code and
+data abstraction. Polymorphism is particularly conducive to expressing the
+mathematical structure of technical computations. Just think of the myriad ways
+different mathematical objects can be multiplied together: one can multiply two
+numbers together, or two matrices together, or a number and a matrix. The
+notion of multiplication itself can also be extended to dot products, cross
+products, tensor products, wedge products, outer products, and smash products,
+to just name a few. All these operators share a common metaphor and it is
+natural to implement these products with polymorphic code that can express the
+mathematical commonality.
 
-In practice, a lot of parallel computing code is mucky and gross because you have to embed all sorts of low level MPI initialization and communication primitives in your code.
+In this paper, we argue that high level languages like Julia provide a suitable
+framework for expressing high level abstractions that allow for extremely
+powerful code reuse, while affording a reasonable level of performance.
+In particular, we explore how Julia's generic function system and type system
+are suitable for expressing polymorphism at the operator level, and show
+how polymorphism can be used not just to encompass different kinds of
+computations, but can even be applied to parallelize code, enable
+visualizations of code implementations, and even verify correctness of code.
 
-How do the GPU Gems chapter showcase parallel prefix?
-
-Can we do better to abstract away the low level communication protocols of a distributed algorithm?
-
-In Julia we expose how overloading at the operator level parallelism can be used to showcase the essentials of what is going on while relegating the parallelism to a lower more primitive level. In other words, successful abstraction!
-
-\section{Multimethods in Julia}
+\subsection{Multimethods in Julia}
 
 In this paper, we use the Julia language\footnote{Julia is MIT-licensed open
 source software and can be downloaded freely from \url{julialang.org}. We use
