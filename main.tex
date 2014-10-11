@@ -455,7 +455,17 @@ communication overhead. The steps in the graph are as predicted by theory,
 arising from the depth of the computation tree growing by one to accommodate
 the extra data.
 
-\subsection{Fan-then-scan parallel prefix}
+\subsection{Other variants of parallel prefix}
+
+A wide variety of parallel prefix algorithms exist beyond the Brent--Kung form
+~\cite{Blelloch1989,Egecioglu1992,Kogge1973,Kruskal1985,Ladner1980,Ofman1962,Ofman1963,Sklansky1960,Sanders2006,Sengupta2007,Wang1996}.
+All of these variants can also be expressed as generic higher-order functions
+analogously to \code{prefix!}; however, not all of them can be written as
+in-place computations~\cite{Merrill2009}. Nevertheless, the general principle
+still holds that generic kernels can be written for an arbitrary parallel
+prefix computation tree, and that these generic kernels can be composed
+effortlessly in Julia to support exactly the same range of operations as the
+Brent--Kung form in \code{prefix!}.
 
 The genericity of \code{prefix!} is also very useful for implementing
 so-called meta-strategies for parallel prefix such as
@@ -831,24 +841,21 @@ sophisticated dynamic scheduler.
 
 \section{Conclusions and outlook}
 
-\TODO{Cleanup}
-
-We used polymorphism in many different ways. For a single set of kernels, we used them to do real computations on numbers and matrices, and also on \code{AccessArray}s to trace through the code to do some visualization, and also on the interval monoid $(\mathbb S_I, \oplus_I)$ to verify program correctness.
-
-Here is a way to visualize parallel algorithms and study their correctness. First we show that with pure operator polymorphism we can explicitly show the equivalence of a parallel algorithm and a sequential execution that accomplishes the same computations. This can be used to prove the correctness of a parallel algorithm.
-
-Other variants: e.g. Snir~\cite{Kruskal1985}, Koc~\cite{Egecioglu1992}, doubly pipelined~\cite{Sanders2006}, harmonically scheduled~\cite{Wang1996}, segmented scan~\cite{Sengupta2007}.
-
-Generalization to nonassocative binary operations~\cite{Chen1992}
-
-Visualization is a byproduct of a correct algorithm. This is a powerful new way to understand how algorithms work.
-
-How about something about fast multipole and variants?
+We have demonstrated how polymorphism using multimethods allows us to write
+generic computation kernels for parallel prefix, which can then be composed
+seamlessly with appropriate types and associative operators not only for
+computation for a wide variety of problems, but also for various code
+introspection tasks such as visualization and formal verification using the
+interval monoid. Julia's language features lends to very natural and minimalist
+code that takes full advantage of \textit{ad hoc} polymorphism to provide a
+single set of computational kernels that can also be visualized directly and
+verified without the need for retranslation and reimplementation in a more
+specialized language.
 
 \section{Acknowledgments}
-We gratefully acknowledge the Julia community, especially Jake Bolewski, for insightful discussions.
 
-Also funding.
+We gratefully acknowledge the Julia community, especially Jake Bolewski, for
+insightful discussions.
 
 \bibliographystyle{abbrv}
 \bibliography{prefix}
