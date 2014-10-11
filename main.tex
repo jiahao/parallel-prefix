@@ -200,7 +200,7 @@ end
 The cumulative sum problem generalizes to any associative operator; in this
 Julia function, the argument \code{+} specifies the operator of interest,
 allowing the same code to be reused for other operators like multiplication
-(\code{*}), maximization (\code{min})~\cite{Shah2013}, or even string
+(\code{*}), maximization (\code{max})~\cite{Shah2013}, or even string
 concatenation\footnote{As written, the \code{prefix\allowbreak\_serial!}
 function assumes, but does not check, that the function passed to it is
 associative. If necessary, checks of the form
@@ -326,10 +326,10 @@ end
 \end{minted}
 
 Again, at this point we have only written serial code that introduces more
-computations than the naive algorithm \code{prefix\allowbreak\_serial!}. However, we will
-argue in Section~\ref{sec:parallel-prefix} that the exact same code in
-\code{prefix!} can be reused for parallel execution which can achieve speedup
-over \code{prefix\allowbreak\_serial!}.
+computations than the naive algorithm \code{prefix\allowbreak\_serial!}.
+However, we will argue in Section~\ref{sec:parallel-prefix} that the exact same
+code in \code{prefix!} can be reused for parallel execution which can achieve
+speedup over \code{prefix\allowbreak\_serial!}.
 
 \section{Operators for distributed computations}
 
