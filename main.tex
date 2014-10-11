@@ -800,26 +800,34 @@ and associative operators over those types.
 
 \section{Related work}
 
-\TODO{Cleanup}
+Julia does not provide parallel prefix in the base library; however, several
+languages like APL~\cite{Iverson1962,Iverson1979} and
+ZPL~\cite{Chamberlain2000} do provide scan primitives. Other languages can use 
+commonly-used library routines for scans; MPI provides the \code{MPI\_scan}
+primitive~\cite{Snir1995,MPI}, and in MPI-2, also the \code{MPI\_Exscan}
+primitive for exclusive scan.~\cite{MPI2} GPU-specific implementations also
+exist, such in Haskell's Accelerate library~\cite{Chakravarty2011} and the
+Thrust C++ library~\cite{Bell2012}. Most of these implementations, however,
+either lack genericity or express genericity through cumbersome language
+features. APL and ZPL do not provide generic parallel prefix. MPI allows
+parallel prefix on any \code{MPI\_Datatype} and \code{MPI\_op}; user-defined
+operations and data types can be used, but must be explicitly wrapped to do so.
+The Haskell Accelerate library provides genericity by generating code from
+user-specified expressions into code that implements parallel prefix, but such
+code does not benefit from Haskell's static type system since they are not
+statically analyzable. Thrust, being written in C++, requires user-specified
+functions to be specified as C++ functors, which are cumbersome to write as
+they must be expressed using C++ expression templates.
 
-Julia lets us encode the interval monoid very naturally, unlike the original work where they had to encode the monoid in C++/OpenCL types~\cite{Chong2014}.
-
-What do other languages do?
-
-Other languages also provide scan primitives like APL~\cite{Iverson1962,Iverson1979}, ZPL~\cite{Chamberlain2000}.
-
-MPI provides the \code{MPI\_scan} primitive~\cite{Snir1995,MPI}, and in MPI-2, also the \code{MPI\_Exscan} primitive for exclusive scan.~\cite{MPI2}
-
-Other approaches wish they have genericity, like the Thrust C++ library which uses crazy C++ functors~\cite{Bell2012}.
-
-Does Haskell have something using monoids?
-
-Haskell Accelerate for GPU programming~\cite{Chakravarty2011}. Is it generic? Yes because it works at the code generation level, taking in expressions and emitting longer expressions that compute the prefix sum. In Haskell land these things are criticised for being not statically typed...?
-
-In Julia we use duck typing.
-
-Our approach is rather naive and does not account for the complexities in real world implementations, for example possible synchronicity issues produced by higher levels of the broadcast and reduce trees that could result in bus saturation. In principle this can be handled at the scheduler level in the system but we currently don't have the capabilities to do so in Julia.
-
+Our implementation of parallel prefix as a higher-order function in Julia is
+generic in that it makes use of duck typing: so long as the input operation is
+associative and the collection of data is indexable, then the prefix sum
+computation will simply work. The simplicity of this generic approach, however,
+is by design rather naive and does not account for the complexities in real
+world implementations, for example possible synchronicity issues produced
+by higher levels of the broadcast and reduce trees that could result in bus
+saturation. Nevertheless, we can handle resource constraints by using a more
+sophisticated dynamic scheduler.
 
 \section{Conclusions and outlook}
 
