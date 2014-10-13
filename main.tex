@@ -729,12 +729,12 @@ Julia types, Definition~\ref{def:intervalmonoid} translates directly into the
 following code:
 
 \begin{minted}[mathescape,texcl]{julia}
-#S is the interval monoid $\mathbb{S}_I$ of Definition \ref{def:intervalmonoid}
+#S is the domain of the interval monoid, $\mathbb{S}_I$
 abstract Tee #$\top$
 abstract Id  #$\mathbf{1}_I$
 typealias S Union(UnitRange, Type{Tee}, Type{Id})
 
-#$\oplus_I$
+#+ is the operator of the interval monoid, $\oplus_I$
 +(I::UnitRange, J::UnitRange) = #$+_1$ 
     I.stop+1==J.start ? (I.start:J.stop) : Tee
 +(::Type{Id}, ::Type{Id}) = Id  #$+_2$
