@@ -359,17 +359,16 @@ import Base.* #Extend existing generic function
     @spawnat r2.where fetch(r1)*fetch(r2)
 \end{minted}
 %
-This one method definition defines multiplication on remote data by
-\code{fetch}ing the remote data from the process containing the data of
-\code{r1}, copying the data of \code{fetch(r1)} to the memory space of the
-process with id \code{r2.where}, which already stores the data of \code{r2}.
-The process \code{r2.where} now contains local copies of both operands.
-Assuming that the local data are of type \code{T}, the Julia code
-then invokes another round of method dispatch based on the method signature
-\code{*(::T, ::T)}. In this way, any data type \code{T} that supports
-multiplication will now also support remote multiplication, regardless of
-whether the data are scalar numbers, $N\times N$ matrices, or something else
-entirely.
+This one method defines multiplication on remote data by \code{fetch}ing the
+remote data from the process containing the data of \code{r1}, copying the data
+of \code{fetch(r1)} to the memory space of the process with id \code{r2.where},
+which already stores the data of \code{r2}. The process \code{r2.where} now
+contains local copies of both operands. Assuming that the local data are of
+type \code{T}, the Julia code then invokes another round of method dispatch
+based on the method signature \code{*(::T, ::T)}. In this way, any data type
+\code{T} that supports multiplication will now also support remote
+multiplication, regardless of whether the data are scalar numbers, $N\times N$
+matrices, or something else entirely.
 
 The main point of this paper is that the very same function \code{prefix!}
 which was executed in serial in previous sections will now run in parallel,
