@@ -260,7 +260,7 @@ of operations in \code{prefix\allowbreak\_serial!} and \code{prefix8!}. Each ver
 represents a processor \code{i} operating on the data \code{y[i]}. Each
 operation of the form \code{y[i] = y[j] + y[i]} is represented by a gate with
 inputs on lines \code{i} and \code{j} and a single output on line \code{i}. The
-main idea is that even though it takes more operations to organizing the
+main idea is that even though it takes more operations to organize the
 computation in the double tree form of \code{prefix8!}, it is possible to
 execute each stage of the computation tree concurrently, and parallel speedup
 can be achieved if the depth of the resulting tree is shorter than the depth of
