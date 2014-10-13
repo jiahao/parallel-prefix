@@ -73,27 +73,29 @@ instrumentation, visualization}
 
 Abstractions are the lifeblood of computer science~\cite{Abelson1996}.
 Separating higher level concepts from lower level implementation details allows
-code to be more composable and reusable. Code using appropriate abstractions is
-simpler to understand and maintain. The desire for high level abstractions
-often seems inimical to writing high-performance code; oftentimes performance
-can only result from code that takes advantage of low-level implementation
-details and hence break abstraction. Thus areas like technical computing and
-parallel programming, where performance is a key consideration, exhibit a
-general dearth of abstraction and suffer the consequent complexities in large,
-inscrutable and nearly unmaintainable codebases. Parallel programs are
-notoriously prone to subtle, nondeterministic bugs arising from race conditions
-and they are difficult to verify for correctness. 
+code to be more composable and reusable, and code using appropriate
+abstractions is simpler to understand and maintain. However, the desire for
+high level abstractions often seems inimical to writing high-performance code;
+oftentimes performance can only result from code that takes advantage of
+low-level implementation details and hence break abstractions. Thus areas like
+technical computing and parallel programming, where performance is a key
+consideration, exhibit a general dearth of abstraction and suffer the
+consequent complexities in large, inscrutable and nearly unmaintainable
+codebases. Such challenges are particularly acute for parallel programs, which
+are written primarily for performance reasons. However, parallel programs are
+notoriously prone to subtle, nondeterministic bugs arising from race
+conditions, and they are difficult to verify for correctness. 
 
-On some level, technical computing has many natural applications for code and
-data abstraction. Polymorphism is particularly conducive to expressing the
-mathematical structure of technical computations. Just think of the myriad ways
-different mathematical objects can be multiplied together: one can multiply two
-numbers together, or two matrices together, or a number and a matrix. The
-notion of multiplication itself can also be extended to dot products, cross
-products, tensor products, wedge products, outer products, and smash products,
-to just name a few. All these operators share a common metaphor and it is
-natural to implement these products with polymorphic code that can express the
-mathematical commonality.
+Programs for technical computing tend to sacrifice abstraction for performance,
+but pay the cost in expressiveness. In contrast, the mathematical structure of
+technical computations is inherently amenable to abstraction, particularly
+polymorphism. Just think of the myriad ways different mathematical objects can
+be multiplied together: one can multiply two numbers together, or two matrices
+together, or a number and a matrix. The notion of multiplication itself can
+also be extended to dot products, cross products, tensor products, wedge
+products, outer products, and smash products, to just name a few. All these
+operators share a common metaphor and it is natural to implement these products
+with polymorphic code that can express the mathematical commonality.
 
 In this paper, we argue that high level languages like Julia provide a suitable
 framework for expressing high level abstractions that allow for extremely
@@ -101,8 +103,8 @@ powerful code reuse, while affording a reasonable level of performance.
 In particular, we explore how Julia's generic function system and type system
 are suitable for expressing polymorphism at the operator level, and show
 how polymorphism can be used not just to encompass different kinds of
-computations, but can even be applied to parallelize code, enable
-visualizations of code implementations, and even verify correctness of code.
+computations, but can be applied to parallelize code, enable visualizations of
+code implementations, and even verify correctness of code.
 
 \subsection{Multimethods in Julia}
 
