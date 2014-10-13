@@ -416,14 +416,15 @@ speedup ratio for $p$ processors running \code{prefix!} over
 
 Figure~\ref{fig:scaling} summarizes benchmark timings for a sample problem
 where we generated $p$ square random matrices with Gaussian entries of size $n
-= 4096$ and timed how long it took to multiply these matrices together.  We
-specifically left out the time needed to broadcast the data to the remote
-processes, so as to focus only on the execution times of the kernels of
-interest. We also took care to disable the garbage collector. Julia, like many
-high-level dynamic languages, provides a garbage collector to aid in memory
-management. Julia v0.3.1 uses a simple stop-the-world, non-moving, precise mark
-and sweep garbage collector, where deallocation and finalization of garbage
-objects may not happen immediately after objects become unused\footnote{The
+= 4096$ and timed how long it took to multiply these matrices together on an
+80-core Xeon E7-8850 machine with 1TB of shared memory. We specifically left
+out the time needed to broadcast the data to the remote processes, so as to
+focus only on the execution times of the kernels of interest. We also took care
+to disable the garbage collector. Julia, like many high-level dynamic
+languages, provides a garbage collector to aid in memory management. Julia
+v0.3.1 uses a simple stop-the-world, non-moving, precise mark and sweep garbage
+collector, where deallocation and finalization of garbage objects may not
+happen immediately after objects become unused\footnote{The
 code for Julia's garbage collector may be found at
 \url{https://github.com/JuliaLang/julia/blob/275afc8b74b9c6ea5d34aefb8085525ff5dfc239/src/gc.c}}~\cite{McCarthy1960}.
 Therefore, it becomes important to factor out the possible effects of
