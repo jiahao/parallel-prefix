@@ -326,11 +326,11 @@ using the multimethod dispatch feature of Julia.
 Julia provides native support for multiprocess distributed computing based on
 one-sided message passing. The basic functionality is provided by the
 \code{remotecall} function, which initiates a nonblocking remote function call
-and returns an explicit future (a remote pointer of type \code{RemoteRef})
-whose value is retrieved by the \code{fetch} function, which is a blocking
-operation. Julia also provides more convenient syntax for \code{remotecall}
-with the \code{@spawn} and \code{@spawnat} macros, which automatically rewrite
-Julia expressions into \code{remotecall} function calls.
+and returns an explicit future~\cite{Friedman1976} (a remote pointer of type
+\code{RemoteRef}) whose value is retrieved by the \code{fetch} function, which
+is a blocking operation. Julia also provides more convenient syntax for
+\code{remotecall} with the \code{@spawn} and \code{@spawnat} macros, which
+automatically rewrite Julia expressions into \code{remotecall} function calls.
 
 We can use Julia's multiple dispatch feature to define associative operators
 which act on remote data rather than local data. Julia's generic function
