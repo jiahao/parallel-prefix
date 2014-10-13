@@ -742,33 +742,31 @@ typealias S Union(UnitRange, Type{Tee}, Type{Id})
     I.stop+1==J.start ? (I.start:J.stop) : Tee
 +(::Type{Id}, ::Type{Id}) = Id  #$+_2$
 +(I::S, ::Type{Id}) = I         #$+_3$
-+(::Type{Id}, I::S) = I         #$+_4$
++(::Type{Id}, J::S) = J         #$+_4$
 +(I::S, J::S) = Tee             #$+_5$
 \end{minted}
 
-The Julia method dispatcher chooses the most specific method that matches the
-type signature of a given set of arguments~\cite{Bezanson2012}. Thus even
-though \code{+} may appear to be ambiguously defined for inputs with the type
-signature \code{(::Unit\-Range, ::UnitRange)}, which matches both $+_1$ and $+_5$
+Figure~\ref{fig:dispatch} summarizes the method dispatch table for the interval
+monoid, which demonstrates the use of some interesting features of Julia's
+method dispatcher~\cite{Bezanson2012}. First, the Julia method dispatcher
+chooses the most specific method that matches the type signature of a given set
+of arguments. Thus even though \code{+} may appear ambiguous for inputs of 
+type \code{(::Unit\-Range, ::UnitRange)}, which matches both $+_1$ and $+_5$
 methods, Julia resolves the ambiguity in favor of $+_1$ which has the more
 specific type signature, since by definition \code{UnitRange} is a subtype of
-\code{S}. However, the method $+_2$ is necessary to resolve the ambiguity
-between $+_3$ and $+_4$: Julia uses symmetric multiple dispatch, so that the
-positions of the arguments are not used to resolve
-ambiguities~\cite{Bezanson2012}. As a result, inputs with type signature
-\code{(::Type\{Id\}, ::Type\{Id\})}, which lie in the intersection of the type
-signatures of $+_3$ and $+_4$, have to be special-cased. Bearing these rules in
-mind, it is straightforward to verify that the definition of \code{+} in the
-code block above is equivalent to that of $\oplus_I$ in
+\code{S}. Second, Julia uses symmetric multiple dispatch: the positions of the
+arguments are not used to resolve ambiguities. Hence we need the special-case
+method $+_2$ with type signature \code{(::Type\{Id\}, ::Type\{Id\})}, which
+lies in the intersection of the type signatures of $+_3$ and $+_4$.  Bearing
+these rules in mind, it is straightforward to verify that the definition of
+\code{+} in the code block above is equivalent to that of $\oplus_I$ in
 Definition~\ref{def:intervalmonoid}. Julia's method dispatch rules allow
 \code{+} to be defined in a way that reveals the catch-all nature of $\top$:
 method $+_5$, which returns \code{Tee}, is dispatched only when none of the
 other methods matches the type signature of the given arguments.
-Figure~\ref{fig:dispatch} summarizes the method dispatch table.
 
 \begin{figure}
   \centering
-
   \includegraphics[width=.9\columnwidth]{intervaldispatch}
   \caption{Operation table for the interval monoid $(\mathbb S_I, \oplus_I)$,
 	  showing the overlapping domains of the various methods
