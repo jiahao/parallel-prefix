@@ -806,23 +806,33 @@ and associative operators over those types.
 \section{Related work}
 
 Julia does not provide parallel prefix in the base library; however, several
-languages like APL~\cite{Iverson1962,Iverson1979} and
-ZPL~\cite{Chamberlain2000} do provide scan primitives. Other languages can use 
-commonly-used library routines for scans; MPI provides the \code{MPI\_scan}
-primitive~\cite{Snir1995,MPI}, and in MPI-2, also the \code{MPI\_Exscan}
-primitive for exclusive scan~\cite{MPI2}. GPU-specific implementations also
-exist, such in Haskell's Accelerate library~\cite{Chakravarty2011} and the
-Thrust C++ library~\cite{Bell2012}. Most of these implementations, however,
-either lack genericity or express genericity through cumbersome language
-semantics. APL and ZPL do not provide generic parallel prefix. MPI allows
-parallel prefix on any \code{MPI\_Datatype} and \code{MPI\_op}; user-defined
-operations and data types can be used, but must be explicitly wrapped to do so.
-The Haskell Accelerate library provides genericity by generating code from
-user-specified expressions into code that implements parallel prefix, but such
-code does not benefit from Haskell's static type system since they are not
-statically analyzable. Thrust, being written in C++, requires user-specified
-functions to be specified as C++ functors, which are cumbersome to write as
-they must be expressed using C++ expression templates.
+languages like APL~\cite{Iverson1962,Iverson1979}, Chapel~\cite{Deitz2006},
+C**~\cite{Viswanathan1996} and ZPL~\cite{Chamberlain2000,Deitz2002} do provide
+scan primitives. Other languages can use commonly-used library routines for
+scans: MPI provides the \code{MPI\_scan} primitive~\cite{Snir1995,MPI}, and in
+MPI-2, also the \code{MPI\_Exscan} primitive for exclusive scan~\cite{MPI2}.
+Intel's Threading Building Blocks (TBB) library provides similar
+functionality~\cite{Reinders2007}.  GPU-specific implementations also exist,
+such in Haskell's Accelerate library~\cite{Chakravarty2011} and the Thrust C++
+library~\cite{Bell2012}. Most of these implementations, however, either lack
+genericity or express genericity through cumbersome language semantics. APL
+does not provide generic parallel prefix, and parallelism is provided only by
+nonstandard implementations. C** only supports user-definable parallel prefix
+for commutative operations~\cite{Viswanathan1996}. ZPL allows only for a
+limited form of overloading in terms of existing
+operators~\cite{Deitz2002,Deitz2006}.  MPI allows parallel prefix on any
+\code{MPI\_Datatype} and \code{MPI\_op}; user-defined operations and data types
+can be used, but must be explicitly wrapped to do so, and furthermore requires
+users to reason explicitly about low-level parallelism. The Haskell Accelerate
+library provides genericity by generating code from user-specified expressions
+into code that implements parallel prefix, but such code does not benefit from
+Haskell's static type system since they are not statically analyzable. Thrust
+and TBB, being written in C++, requires user-specified functions to be
+specified as C++ functors, which are cumbersome to write as they must be
+expressed using C++ expression templates. Chapel~\cite{Deitz2006} comes
+closest to our work in providing user-definable scan operators in convenient
+syntax; however, operators have to be explicitly defined as classes, which do
+not support the full polymorphic expressiveness of multimethods.
 
 Our implementation of parallel prefix as a higher-order function in Julia is
 generic in that it makes use of duck typing: so long as the input operation is
