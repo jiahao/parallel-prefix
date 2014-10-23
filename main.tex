@@ -1,7 +1,9 @@
 \documentclass{sig-alternate}
 
 %Nice code listings
-\usepackage{minted}
+
+\usepackage{listings}
+
 \usepackage[hidelinks]{hyperref}
 \usepackage{url}
 \newcommand{\code}[1]{\texttt{#1}}
@@ -20,7 +22,7 @@
 % --- Author Metadata here ---
 \conferenceinfo{HPTCDL}{November 17, 2014, New Orleans, Louisiana, USA}
 \CopyrightYear{2014}
-\crdata{978-1-4799-5500-8/14}
+%\crdata{978-1-4799-5500-8/14}
 % --- End of Author Metadata ---
 
 \title{Parallel Prefix Polymorphism Permits \\
@@ -153,34 +155,34 @@ generate parallel code, visualizations, and also proofs of correctness.
 The basic problem of interest is to compute from some initial data \code{y} the
 partial sums \code{z} such that:
 
-\begin{minted}{julia}
+\begin{verbatim}
 z[1] = y[1]
 z[2] = y[1] + y[2]
 z[3] = y[1] + y[2] + y[3]
 ...
-\end{minted}
+\end{verbatim}
 %
 One way to compute this sum efficiently is to note the prefix property, i.e.\
 that the $k$th partial sum depends only on the $(k-1)$th partial sum and the
 $k$th element: 
 
-\begin{minted}{julia}
+\begin{verbatim}
 z[1] = y[1]
 z[2] = z[1] + y[2]
 z[3] = z[2] + y[3]
 ...
-\end{minted}
+\end{verbatim}
 %
 which leads to the simple algorithm:
 
-\begin{minted}{julia}
+\begin{verbatim}
 function prefix_serial!(y, +)
     for i=2:length(y)
         y[i] = y[i-1] + y[i]
     end
     y
 end
-\end{minted}
+\end{verbatim}
 
 The cumulative sum problem generalizes to any associative operator; in this
 Julia function, the argument \code{+} specifies the operator of interest,
@@ -190,7 +192,7 @@ concatenation\footnote{As written, the \code{prefix\allowbreak\_serial!}
 function assumes, but does not check, that the function passed to it is
 associative. If necessary, checks of the form
 
-\mint{julia}|@assert (y[1]+y[2])+y[3] == y[1]+(y[2]+y[3])|
+@assert (y[1]+y[2])+y[3] == y[1]+(y[2]+y[3])
 %
 can be included, but for simplicity of presentation, we omit such checks from
 the code presented in this paper. We also neglect concerns relating to
@@ -246,7 +248,7 @@ In this paper, we focus on the Brent--Kung form~\cite{Brent1982} of parallel
 prefix, where the computation is organized into two trees. For simplicity, we
 present first the special case of parallel prefix for $n=8$ data points.
 
-\begin{minted}{julia}
+\begin{verbatim}
 function prefix8!(y, +)
     length(y)==8 || error("length 8 only")
     for i in [2,4,6,8] y[i] = y[i-1] + y[i] end
@@ -256,7 +258,7 @@ function prefix8!(y, +)
     for i in [ 3,5,7 ] y[i] = y[i-1] + y[i] end
     y
 end
-\end{minted}
+\end{verbatim}
 
 Figure~\ref{fig:gates} illustrates the difference between the number and order
 of operations in \code{prefix\allowbreak\_serial!} and \code{prefix8!}. Each vertical line
@@ -276,10 +278,14 @@ right, then top to bottom of the computation tree.
 \begin{figure}
   \centering
 
-  \mint{julia}|render(prefix_serial!(AccessArray(8),+))|
+  \begin{verbatim}
+  render(prefix_serial!(AccessArray(8),+))
+  \end{verbatim}
   \includegraphics{serial}
   \vspace{12 pt}
-  \mint{julia}|render(prefix8!(AccessArray(8),+))|
+  \begin{verbatim}
+  render(prefix!(AccessArray(8),+))
+  \end{verbatim}
   \includegraphics{tree}
   \caption{Above: operation order generated from the left-associative algorithm
 	  \code{prefix\allowbreak\_serial!}.
@@ -297,7 +303,7 @@ function that solves the general case of $n$ data points. While the indices are
 somewhat less clear than when explicitly written out in \code{prefix8!}, the
 \code{prefix!} function nonetheless preserves the double tree structure.
 
-\begin{minted}{julia}
+\begin{verbatim}
 function prefix!(y, +)
     l=length(y)
     k=iceil(log2(l))
@@ -311,7 +317,7 @@ function prefix!(y, +)
     end
     y
 end
-\end{minted}
+\end{verbatim}
 
 Again, at this point we have only written serial code that introduces more
 computations than the naive algorithm \code{prefix\allowbreak\_serial!}.
@@ -344,7 +350,7 @@ data.
 
 For example, we can run the following code:
 
-\begin{minted}{julia}
+\begin{verbatim}
 #Start a Julia process on every available core
 #addprocs(n) adds n processors
 #Sys.CPU_CORES is the total number of available
@@ -359,7 +365,7 @@ import Base.* #Extend existing generic function
 #Define elementary operations on remote data
 *(r1::RemoteRef,r2::RemoteRef)=
     @spawnat r2.where fetch(r1)*fetch(r2)
-\end{minted}
+\end{verbatim}
 %
 This one method defines multiplication on remote data by \code{fetch}ing the
 remote data from the process containing the data of \code{r1}, copying the data
@@ -475,7 +481,9 @@ offset by the correct result by the value of the last element in its preceding
 chunk. The offsets can be propagated simply by running \code{prefix!} on the
 distributed array of chunks, with the operator
 
-\mint{julia}|+(a, b) = a[end] .+ b|
+\begin{verbatim}
++(a, b) = a[end] .+ b
+\end{verbatim}
 %
 This variant of parallel prefix avoids the extra work incurred by generating a
 computation tree that is wider than the total number of available processes,
@@ -542,16 +550,18 @@ three functions:
 The Julia parser also provides syntax sugar for the latter two operations: code
 like
 
-\mint{julia}|A[i] = A[j] + A[k]|
+\begin{verbatim}
+A[i] = A[j] + A[k]
+\end{verbatim}
 %
 is desugared into code of the form
 
-\begin{minted}{julia}
+\begin{verbatim}
 x = getindex(A, j)
 y = getindex(A, k)
 z = x + y
 setindex!(A, z, i)
-\end{minted}
+\end{verbatim}
 
 All the operations in the prefix sum kernels presented have array access
 operations of this form: two \code{getindex} calls followed by one
@@ -563,7 +573,7 @@ by indexing operations.
 Here is the entire Julia code that implements \code{AccessArray}, an abstract
 array type which instruments its indexing operations:
 
-\begin{minted}{julia}
+\begin{verbatim}
 import Base: getindex, setindex!, length
 
 type AccessArray
@@ -587,7 +597,7 @@ end
 
 #Dummy associative operator
 +(a::Void, b::Void) = nothing
-\end{minted}
+\end{verbatim}
 %
 The \code{AccessArray} type contains three fields:
 
@@ -733,7 +743,7 @@ With this mapping of the abstract interval monoid domain $\mathbb S_I$ onto
 Julia types, Definition~\ref{def:intervalmonoid} translates directly into the
 following code:
 
-\begin{minted}[mathescape,texcl]{julia}
+\begin{verbatim}[mathescape,texcl]{julia}
 #S is the domain of the interval monoid, $\mathbb{S}_I$
 abstract Tee #$\top$
 abstract Id  #$\mathbf{1}_I$
@@ -746,7 +756,7 @@ typealias S Union(UnitRange, Type{Tee}, Type{Id})
 +(I::S, ::Type{Id}) = I         #$+_3$
 +(::Type{Id}, J::S) = J         #$+_4$
 +(I::S, J::S) = Tee             #$+_5$
-\end{minted}
+\end{verbatim}
 
 Figure~\ref{fig:dispatch} summarizes the method dispatch table for the interval
 monoid, which demonstrates the use of some interesting features of Julia's
@@ -780,19 +790,19 @@ other methods matches the type signature of the given arguments.
 Verifying some function \code{kernel} for the problem size \code{n} simply
 reduces to writing the assertion:
 
-\begin{minted}{julia}
+\begin{verbatim}
 #Test that kernel is correct for problem size n
 @assert kernel([k:k for k=1:n],+)==[1:k for k=1:n]
-\end{minted}
+\end{verbatim}
 
 Attempting to verify an incorrect kernel results in at least one $\top$ being
 produced during the computation, thus poisoning the program state and
 precipitating type conversion errors of the form
 
-\begin{minted}{jlcon}
+\begin{verbatim}{jlcon}
 `convert` has no method matching
 convert(::Type{UnitRange}, ::Type{Tee})
-\end{minted}
+\end{verbatim}
 %
 which arise from the inability of noncontiguous ranges to be expressed as
 \code{UnitRange}s. 
@@ -899,7 +909,7 @@ simplifying assumption does not fundamentally change the main idea of rendering
 instrumentation data being acquired at the level of individual variables, and
 more sophisticated reasoning about tree depths can be used as necessary.
 
-\begin{minted}{julia}
+\begin{verbatim}
 using Compose
 
 type gate
@@ -949,6 +959,6 @@ function render(A::AccessArray)
       linewidth(0.1mm), stroke("grey")))
     compose(context(), C...)
 end
-\end{minted}
+\end{verbatim}
 
 \end{document}
