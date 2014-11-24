@@ -691,8 +691,8 @@ which correspond to partial sums which cannot be represented by slicing with a
 
 The key insight of \cite{Chong2014} is that correct computations of prefix sums
 cannot generate noncontiguous elements $\top$, otherwise they would by
-definition violate the prefixing property \code{prefix!(y[1:j+1], +) =
-prefix!(y[1:j], +) + y[j+1]}.\\
+definition violate the prefixing property \code{prefix!(y[1:j+1], +)[end] =
+prefix!(y[1:j], +)[end] + y[j+1]}.\\
 From this insight, the authors of \cite{Chong2014} derive two correctness
 results:
 
